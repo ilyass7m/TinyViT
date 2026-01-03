@@ -1,0 +1,60 @@
+# TinyViT-5M Fine-tuning for CIFAR-100 (Large-Scale)
+# Fine-tune from ImageNet pretrained weights
+# Optimized for 2xA40 GPUs with batch size 1024
+# Usage: torchrun --nproc_per_node=2 main.py --cfg configs/cifar100/tiny_vit_5m_cifar100_finetune_largescale.yaml --pretrained path/to/imagenet_weights.pth
+
+MODEL:
+  NAME: TinyViT-5M-CIFAR100-Finetune-LargeScale
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 512
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Fine-tuning: 30 epochs (as per your requirement)
+  EPOCHS: 30
+  WARMUP_EPOCHS: 3
+  # Lower LR for fine-tuning, scaled for batch 1024
+  BASE_LR: 2e-4
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 1e-8
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.75
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: True
+  # Keep BN in eval mode when fine-tuning
+  EVAL_BN_WHEN_TRAINING: True
+
+AUG:
+  # Lighter augmentation for fine-tuning
+  COLOR_JITTER: 0.3
+  AUTO_AUGMENT: rand-m5-mstd0.5-inc1
+  REPROB: 0.1
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable mixup/cutmix for fine-tuning (as in paper)
+  MIXUP: 0.0
+  CUTMIX: 0.0
+  MIXUP_PROB: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 10
+SAVE_FREQ: 5

@@ -1,0 +1,55 @@
+# ResNet50 Config for SAVING Teacher Logits on CIFAR-100
+# Step 2: Save ResNet50's soft predictions for student training
+#
+# Usage:
+#   torchrun --nproc_per_node=2 save_logits.py \
+#     --cfg configs/cifar100/resnet50_cifar100_save_logits.yaml \
+#     --data-path ./data \
+#     --output ./output/resnet50_save_logits \
+#     --resume ./output/resnet50_teacher/ckpt_best.pth \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_resnet50/
+
+MODEL:
+  NAME: ResNet50-CIFAR100-Teacher
+  TYPE: resnet50
+  NUM_CLASSES: 100
+  DROP_RATE: 0.0
+  # Don't load pretrained here - we'll load fine-tuned checkpoint via --resume
+  PRETRAINED_TIMM: False
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Number of epochs of logits to save
+  # More epochs = more augmentation variety for student
+  EPOCHS: 10
+  START_EPOCH: 0
+
+# DISTILLATION CONFIG
+DISTILL:
+  ENABLED: True
+  SAVE_TEACHER_LOGITS: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  # Save top-50 for CIFAR-100 (100 classes)
+  LOGITS_TOPK: 50
+
+AUG:
+  # Must match student training augmentation!
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 50

@@ -1,0 +1,55 @@
+# TinyViT-21M Config for SAVING Teacher Logits on CIFAR-100
+# Step 2: Use this with save_logits.py to save teacher's predictions
+# Usage: torchrun --nproc_per_node=2 save_logits.py --cfg configs/cifar100/tiny_vit_21m_cifar100_save_logits.yaml --resume output/teacher/best.pth --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_cifar100/
+
+MODEL:
+  NAME: TinyViT-21M-CIFAR100-Teacher
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 24 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 96, 192, 384, 576 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Number of epochs to save logits for
+  # Student will train on these epochs (cycling through)
+  EPOCHS: 10
+  START_EPOCH: 0
+
+# DISTILLATION CONFIG FOR SAVING
+DISTILL:
+  ENABLED: True
+  SAVE_TEACHER_LOGITS: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  # For CIFAR-100: Save top-50 class probabilities
+  # Remaining 50 classes share the leftover probability (dark knowledge preserved)
+  # This halves storage while keeping distillation effective
+  LOGITS_TOPK: 50
+
+AUG:
+  # Same augmentation as student training
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 50

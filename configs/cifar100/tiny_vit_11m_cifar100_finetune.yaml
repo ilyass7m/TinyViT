@@ -1,0 +1,48 @@
+# TinyViT-11M Fine-tuning config for CIFAR-100
+# Use with: --pretrained imagenet
+
+MODEL:
+  NAME: TinyViT-11M-CIFAR100-Finetune
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 8, 14 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 256, 448 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 64
+  NUM_WORKERS: 4
+
+TRAIN:
+  EPOCHS: 50
+  WARMUP_EPOCHS: 5
+  BASE_LR: 1e-4
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 0.01
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.75
+
+AUG:
+  COLOR_JITTER: 0.3
+  AUTO_AUGMENT: rand-m5-mstd0.5-inc1
+  REPROB: 0.1
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.5
+  CUTMIX: 0.5
+  MIXUP_PROB: 0.8
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True

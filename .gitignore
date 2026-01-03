@@ -1,0 +1,33 @@
+# Large model files
+*.pth
+*.pt
+*.bin
+*.h5
+
+# Dataset files
+*.tar.gz
+*.zip
+*.npz
+*.hdf5
+*.pkl
+
+# Data directory (contains large datasets)
+data/cifar-100-python/
+
+# Training checkpoints
+checkpoint*
+
+# Output directories
+output_cifar/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Downloaded files
+Miniconda3*.sh
+
+# Literal placeholder directories
+%DATA_DIR%/
+%OUTPUT_DIR%/
+.claude/

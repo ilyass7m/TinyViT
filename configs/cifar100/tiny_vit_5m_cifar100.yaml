@@ -1,0 +1,48 @@
+# TinyViT-5M for CIFAR-100
+# Adapted for 32x32 images with 100 classes
+
+MODEL:
+  NAME: TinyViT-5M-CIFAR100
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 64
+  NUM_WORKERS: 4
+
+TRAIN:
+  EPOCHS: 200
+  WARMUP_EPOCHS: 10
+  BASE_LR: 1e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True

@@ -1,0 +1,25 @@
+{
+  "exp_id": "B1",
+  "exp_name": "baseline_scratch",
+  "description": "Train TinyViT-5M from random initialization (lower bound)",
+  "seed": 42,
+  "model_type": "student",
+  "student_type": "tiny_vit_5m",
+  "teacher_type": null,
+  "pretrained": null,
+  "data": {
+    "dataset": "cifar100",
+    "img_size": 224,
+    "batch_size": 64
+  },
+  "training": {
+    "epochs": 1,
+    "base_lr": 0.001,
+    "weight_decay": 0.05
+  },
+  "distillation": {
+    "enabled": false,
+    "topk": 100,
+    "alpha": 0.5
+  }
+}

@@ -1,0 +1,62 @@
+# ResNet50 Teacher for CIFAR-100 Distillation
+# Step 1: Fine-tune ResNet50 (ImageNet pretrained) on CIFAR-100
+#
+# Usage:
+#   torchrun --nproc_per_node=2 main.py \
+#     --cfg configs/cifar100/resnet50_cifar100_teacher.yaml \
+#     --data-path ./data \
+#     --output ./output/resnet50_teacher
+#
+# Note: ResNet50 pretrained weights are loaded automatically via timm
+#       No need for --pretrained flag (timm handles it)
+
+MODEL:
+  NAME: ResNet50-CIFAR100-Teacher
+  TYPE: resnet50  # Uses timm.create_model('resnet50', pretrained=True)
+  NUM_CLASSES: 100
+  DROP_RATE: 0.0
+  # timm will auto-load ImageNet pretrained weights and adapt head to 100 classes
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Fine-tuning settings for ResNet50
+  EPOCHS: 30
+  WARMUP_EPOCHS: 3
+  BASE_LR: 1e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 1e-4
+  CLIP_GRAD: 5.0
+  # No layer LR decay for ResNet (not supported)
+  LAYER_LR_DECAY: 1.0
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: True
+  OPTIMIZER:
+    NAME: adamw
+    EPS: 1e-8
+    BETAS: [0.9, 0.999]
+
+AUG:
+  # Standard augmentation for fine-tuning
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable mixup for cleaner logits
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 20
+SAVE_FREQ: 5

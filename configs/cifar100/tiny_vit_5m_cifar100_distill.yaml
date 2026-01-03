@@ -1,0 +1,63 @@
+# TinyViT-5M Student with Distillation on CIFAR-100
+# Step 3: Train student using saved teacher logits
+# Usage: torchrun --nproc_per_node=2 main.py --cfg configs/cifar100/tiny_vit_5m_cifar100_distill.yaml --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_cifar100/
+
+MODEL:
+  NAME: TinyViT-5M-CIFAR100-Distill
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0  # No label smoothing when using soft targets
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Student training with distillation
+  EPOCHS: 100
+  WARMUP_EPOCHS: 5
+  BASE_LR: 2e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+# DISTILLATION CONFIG
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts or command line
+  # Must match the topk used when saving teacher logits!
+  # Top-50 classes saved exactly, remaining 50 share leftover probability
+  LOGITS_TOPK: 50
+
+AUG:
+  # Augmentation should match what was used when saving teacher logits
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # IMPORTANT: Disable Mixup/CutMix when using distillation
+  # (augmentation seeds don't handle mixup well)
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 20
+SAVE_FREQ: 10
