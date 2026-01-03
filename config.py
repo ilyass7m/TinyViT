@@ -62,6 +62,8 @@ _C.MODEL.DROP_RATE = 0.0
 _C.MODEL.DROP_PATH_RATE = 0.1
 # Label Smoothing
 _C.MODEL.LABEL_SMOOTHING = 0.1
+# Use timm pretrained weights (for ResNet, EfficientNet, ViT teachers)
+_C.MODEL.PRETRAINED_TIMM = True
 
 # TinyViT Model
 _C.MODEL.TINY_VIT = CN()

@@ -40,7 +40,7 @@ def build_model(config):
         # Load pretrained ResNet and replace classifier head
         model = timm.create_model(
             model_type,
-            pretrained=config.MODEL.get('PRETRAINED_TIMM', True),
+            pretrained=config.MODEL.PRETRAINED_TIMM,
             num_classes=config.MODEL.NUM_CLASSES,
             drop_rate=config.MODEL.DROP_RATE,
         )
@@ -49,7 +49,7 @@ def build_model(config):
         import timm
         model = timm.create_model(
             model_type,
-            pretrained=config.MODEL.get('PRETRAINED_TIMM', True),
+            pretrained=config.MODEL.PRETRAINED_TIMM,
             num_classes=config.MODEL.NUM_CLASSES,
             drop_rate=config.MODEL.DROP_RATE,
         )
@@ -58,7 +58,7 @@ def build_model(config):
         import timm
         model = timm.create_model(
             model_type,
-            pretrained=config.MODEL.get('PRETRAINED_TIMM', True),
+            pretrained=config.MODEL.PRETRAINED_TIMM,
             num_classes=config.MODEL.NUM_CLASSES,
             drop_rate=config.MODEL.DROP_RATE,
             img_size=config.DATA.IMG_SIZE,
