@@ -62,7 +62,6 @@ class LRSchedulerWrapper:
             if lr_scale != group['lr_scale']:
                 if is_main_process():
                     print('=' * 30)
-                    print("params:", [e.param_name for e in params])
                     print(
                         f"change lr scale: {group['lr_scale']} to {lr_scale}")
             group['lr_scale'] = lr_scale

@@ -49,6 +49,8 @@ def add_common_args(parser):
     parser.add_argument('--use-wandb', action='store_true',
                         default=False, help='use wandb to record log')
 
+    parser.add_argument('--wandb-run-name',
+                        default="TinyViT", help='name your run')
     # distributed training
     parser.add_argument("--local_rank", type=int,
                         help='local rank for DistributedDataParallel')
@@ -61,7 +63,7 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, loss_scaler, logger)
         checkpoint = torch.hub.load_state_dict_from_url(
             config.MODEL.RESUME, map_location='cpu', check_hash=True)
     else:
-        checkpoint = torch.load(config.MODEL.RESUME, map_location='cpu')
+        checkpoint = torch.load(config.MODEL.RESUME, map_location='cpu',weights_only=False)
 
     params = checkpoint['model']
     now_model_state = model.state_dict()

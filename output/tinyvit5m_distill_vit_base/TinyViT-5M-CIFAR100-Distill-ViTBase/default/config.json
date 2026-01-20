@@ -1,0 +1,101 @@
+AMP_ENABLE: true
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  COLOR_JITTER: 0.4
+  CUTMIX: 0.0
+  CUTMIX_MINMAX: null
+  MIXUP: 0.0
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+BASE:
+- ''
+DATA:
+  BATCH_SIZE: 256
+  DATASET: cifar100
+  DATA_PATH: ./data
+  DEBUG: false
+  FNAME_FORMAT: '{}.jpeg'
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  MEAN_AND_STD_TYPE: default
+  NUM_WORKERS: 8
+  PIN_MEMORY: true
+DISTILL:
+  ENABLED: true
+  LOGITS_TOPK: 50
+  SAVE_TEACHER_LOGITS: false
+  TEACHER_LOGITS_PATH: ./output/logits/vit_base/
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0
+  NAME: TinyViT-5M-CIFAR100-Distill-ViTBase
+  NUM_CLASSES: 100
+  PRETRAINED: ''
+  PRETRAINED_TIMM: true
+  RESUME: ''
+  TINY_VIT:
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIMS:
+    - 64
+    - 128
+    - 160
+    - 320
+    IN_CHANS: 3
+    LOCAL_CONV_SIZE: 3
+    MBCONV_EXPAND_RATIO: 4.0
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 2
+    - 4
+    - 5
+    - 10
+    WINDOW_SIZES:
+    - 7
+    - 7
+    - 14
+    - 7
+  TYPE: tiny_vit
+OUTPUT: ./output/tinyvit5m_distill_vit_base/TinyViT-5M-CIFAR100-Distill-ViTBase/default
+PRINT_FREQ: 20
+SAVE_FREQ: 10
+SEED: 0
+TAG: default
+TEST:
+  CROP: true
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.001
+  CLIP_GRAD: 5.0
+  EPOCHS: 100
+  EVAL_BN_WHEN_TRAINING: false
+  LAYER_LR_DECAY: 0.9
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    NAME: cosine
+  MIN_LR: 5.0e-06
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  START_EPOCH: 0
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 5.0e-07
+  WEIGHT_DECAY: 0.05

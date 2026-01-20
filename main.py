@@ -561,8 +561,12 @@ if __name__ == '__main__':
         config_dict['git'] = get_git_info()
         if args.use_wandb:
             wandb_output_path = config.OUTPUT
+            if args.wandb_run_name:
+                run_name = args.wandb_run_name
+            else:
+                run_name = config.MODEL.NAME
             wandb.init(project="TinyViT", config=config_dict,
-                       dir=wandb_output_path)
+                       dir=wandb_output_path,name=run_name)
 
     # print git info
     logger.info('===== git =====')

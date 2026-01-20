@@ -72,6 +72,14 @@ def main(config):
     loss_scaler = NativeScalerWithGradNormCount()
     load_checkpoint(config, model_without_ddp, optimizer,
                     lr_scheduler, loss_scaler, logger)
+
+    # Reset START_EPOCH to 0 for saving logits (load_checkpoint sets it to checkpoint epoch + 1)
+    # We want to save logits for epochs 0 to EPOCHS, not resume from checkpoint epoch
+    config.defrost()
+    config.TRAIN.START_EPOCH = 0
+    config.freeze()
+    logger.info(f"Saving logits for epochs 0 to {config.TRAIN.EPOCHS}")
+
     if not args.skip_eval and not args.check_saved_logits:
         acc1, acc5, loss = validate(config, data_loader_val, model)
         logger.info(

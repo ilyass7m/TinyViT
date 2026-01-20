@@ -1,0 +1,64 @@
+# ViT-Base Teacher for CIFAR-100 Distillation
+# Step 1: Fine-tune ViT-Base (ImageNet pretrained) on CIFAR-100
+#
+# Usage:
+#   torchrun --nproc_per_node=2 main.py \
+#     --cfg configs/cifar100/vit_base_cifar100_teacher.yaml \
+#     --data-path ./data \
+#     --output ./output/vit_base_teacher
+#
+# Note: ViT-Base pretrained weights are loaded automatically via timm
+#       Uses vit_base_patch16_224 (~86M params, 12 blocks, 768 hidden dim)
+
+MODEL:
+  NAME: ViT-Base-CIFAR100-Teacher
+  TYPE: vit_base_patch16_224  # Uses timm.create_model('vit_base_patch16_224', pretrained=True)
+  NUM_CLASSES: 100
+  DROP_RATE: 0.0
+  DROP_PATH_RATE: 0.1  # Stochastic depth for ViT
+  # timm will auto-load ImageNet pretrained weights and adapt head to 100 classes
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Fine-tuning settings for ViT-Base
+  # Lower LR than ResNet since transformers are more sensitive
+  EPOCHS: 30
+  WARMUP_EPOCHS: 5
+  BASE_LR: 5e-4
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 0.05  # Higher weight decay for ViT (standard practice)
+  CLIP_GRAD: 1.0  # Tighter gradient clipping for ViT stability
+  # Layer-wise LR decay (important for fine-tuning ViT)
+  LAYER_LR_DECAY: 0.65
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: True
+  OPTIMIZER:
+    NAME: adamw
+    EPS: 1e-8
+    BETAS: [0.9, 0.999]
+
+AUG:
+  # Standard augmentation for fine-tuning
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable mixup for cleaner teacher logits
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 20
+SAVE_FREQ: 5

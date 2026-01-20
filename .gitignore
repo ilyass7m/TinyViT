@@ -31,3 +31,4 @@ Miniconda3*.sh
 %DATA_DIR%/
 %OUTPUT_DIR%/
 .claude/
+outpu/

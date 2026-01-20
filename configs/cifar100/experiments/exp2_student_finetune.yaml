@@ -1,0 +1,64 @@
+# =============================================================================
+# EXPERIMENT 2: Student Transfer Learning (Extension Baseline)
+# =============================================================================
+# Purpose: Missing baseline - TinyViT-5M pretrained on ImageNet, finetuned on CIFAR-100
+# Expected accuracy: ~85-88%
+#
+# Usage:
+#   # First download pretrained weights:
+#   wget -P pretrained/ https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_22k_distill.pth
+#
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 main.py \
+#     --cfg configs/cifar100/experiments/exp2_student_finetune.yaml \
+#     --data-path ./data \
+#     --output ./output/exp2_finetune \
+#     --pretrained pretrained/tiny_vit_5m_22k_distill.pth
+
+MODEL:
+  NAME: Exp2-TinyViT5M-Finetune
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 200
+  WARMUP_EPOCHS: 10
+  BASE_LR: 5e-4  # Lower LR for finetuning
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.75  # Stronger decay for pretrained weights
+  AUTO_RESUME: True
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 50
+SAVE_FREQ: 20
