@@ -1,0 +1,70 @@
+# TinyViT-5M Fine-tuning on CIFAR-100 (from IN-1k Distillation Pretrained)
+# Step 3 of Option 3: Fine-tune the distilled model on CIFAR-100
+#
+# This config is specifically for fine-tuning after IN-1k distillation pretraining
+# No distillation during fine-tuning - just standard supervised training
+#
+# Usage:
+#   torchrun --nproc_per_node=1 main.py \
+#     --cfg configs/cifar100/tiny_vit_5m_cifar100_finetune_from_1k_distill.yaml \
+#     --data-path ./data \
+#     --output ./output/tiny_vit_5m_cifar100_from_1k_distill \
+#     --pretrained ./output/tiny_vit_5m_1k_distill/ckpt_best.pth
+#
+# Expected: 85-88% accuracy (should outperform scratch training on CIFAR-100)
+
+MODEL:
+  NAME: TinyViT-5M-CIFAR100-From-1k-Distill
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 64
+  NUM_WORKERS: 4
+
+TRAIN:
+  # Fine-tuning schedule (fewer epochs, lower LR)
+  EPOCHS: 50
+  WARMUP_EPOCHS: 5
+  BASE_LR: 1e-4
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 0.01
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.75
+  AUTO_RESUME: True
+
+# No distillation during fine-tuning
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Lighter augmentation for fine-tuning
+  COLOR_JITTER: 0.3
+  AUTO_AUGMENT: rand-m5-mstd0.5-inc1
+  REPROB: 0.1
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.5
+  CUTMIX: 0.5
+  MIXUP_PROB: 0.8
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 20
+SAVE_FREQ: 10

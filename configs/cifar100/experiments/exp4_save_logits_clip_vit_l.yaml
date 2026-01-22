@@ -1,0 +1,55 @@
+# =============================================================================
+# EXPERIMENT 4c: Save CLIP-ViT-L/14 Teacher Logits
+# =============================================================================
+# Purpose: Save soft labels from finetuned CLIP-ViT-L/14 for offline distillation
+#
+# This saves 10 epochs of augmented images with teacher's soft predictions.
+# During 200-epoch student training, these are cycled (epoch % 10).
+#
+# Usage:
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 save_logits.py \
+#     --cfg configs/cifar100/experiments/exp4_save_logits_clip_vit_l.yaml \
+#     --data-path ./data \
+#     --resume ./output/exp3_teacher_clip_vit_l/Exp3-CLIP-ViT-L-Teacher/ckpt_epoch_29.pth \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l/
+
+MODEL:
+  NAME: Exp4-SaveLogits-CLIP
+  TYPE: clip_vit_large_patch14
+  NUM_CLASSES: 100
+  PRETRAINED_TIMM: True  # Load base CLIP weights (will be overridden by --resume)
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128  # Larger batch for inference (CLIP is in eval mode)
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  MEAN_AND_STD_TYPE: clip  # Use CLIP normalization
+
+TRAIN:
+  EPOCHS: 10  # Number of augmentation variants to save (cycled during 200-epoch training)
+  START_EPOCH: 0
+
+# Logits saving configuration
+DISTILL:
+  ENABLED: True
+  SAVE_TEACHER_LOGITS: True
+  LOGITS_TOPK: 100  # Save all 100 classes for CIFAR-100
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 100

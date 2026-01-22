@@ -82,6 +82,8 @@ _C.DISTILL.ENABLED = False
 _C.DISTILL.TEACHER_LOGITS_PATH = ''
 _C.DISTILL.SAVE_TEACHER_LOGITS = False
 _C.DISTILL.LOGITS_TOPK = 100
+_C.DISTILL.TEMPERATURE = 1.0  # Temperature for softmax in distillation
+_C.DISTILL.ALPHA = 0.5  # Weight for KL loss: L = (1-alpha)*CE + alpha*KL
 
 # -----------------------------------------------------------------------------
 # Training settings
