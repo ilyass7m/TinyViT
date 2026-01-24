@@ -1,0 +1,83 @@
+# =============================================================================
+# EXPERIMENT B: TinyViT-11M Trained from Scratch on ImageNet-1K (Baseline)
+# =============================================================================
+# Purpose: Baseline comparison - train TinyViT-11M without knowledge distillation
+#
+# This serves as the control experiment to measure the benefit of distillation.
+# Same architecture and training schedule as distillation experiment,
+# but uses standard cross-entropy with hard labels + Mixup/CutMix.
+#
+# After pretraining, fine-tune on CIFAR-100 for evaluation.
+#
+# TinyViT-11M Architecture:
+# - Depths: [2, 2, 6, 2]
+# - Heads: [2, 4, 8, 14]
+# - Embed dims: [64, 128, 256, 448]
+# - ~11M parameters
+#
+# Usage:
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_11m_1k_scratch.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/tiny_vit_11m_1k_scratch
+#
+# Expected: ~80-81% top-1 accuracy on ImageNet-1K validation
+# Time: ~24-48 hours on 4xA40 GPUs (300 epochs)
+
+MODEL:
+  NAME: TinyViT-11M-1k-Scratch
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 8, 14 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 256, 448 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Standard ImageNet-1K training schedule (same as distillation for fair comparison)
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  BASE_LR: 2e-3
+  WARMUP_LR: 2e-6
+  MIN_LR: 2e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+# No distillation
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Standard augmentation with Mixup/CutMix (enabled for scratch training)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 100
+SAVE_FREQ: 20

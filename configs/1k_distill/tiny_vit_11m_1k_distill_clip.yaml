@@ -1,0 +1,88 @@
+# =============================================================================
+# EXPERIMENT A: TinyViT-11M Distillation Pretraining with CLIP on ImageNet-1K
+# =============================================================================
+# Purpose: Pretrain TinyViT-11M using CLIP-ViT-L/14 soft labels (knowledge distillation)
+#
+# This follows the TinyViT paper methodology:
+# - Use saved teacher logits (offline distillation for efficiency)
+# - Student learns from soft labels: L = (1-alpha)*CE + alpha*KL
+# - No Mixup/CutMix (seed replay limitation)
+#
+# After pretraining, fine-tune on CIFAR-100 for evaluation.
+#
+# TinyViT-11M Architecture:
+# - Depths: [2, 2, 6, 2]
+# - Heads: [2, 4, 8, 14]
+# - Embed dims: [64, 128, 256, 448]
+# - ~11M parameters
+#
+# Usage:
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_11m_1k_distill_clip.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/tiny_vit_11m_1k_distill_clip \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l_1k/
+#
+# Expected: ~81-82% top-1 accuracy on ImageNet-1K validation
+# Time: ~24-48 hours on 4xA40 GPUs (300 epochs)
+
+MODEL:
+  NAME: TinyViT-11M-1k-Distill-CLIP
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0  # No label smoothing with soft targets
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 8, 14 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 256, 448 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  # Use CLIP normalization to match teacher preprocessing
+  MEAN_AND_STD_TYPE: clip
+
+TRAIN:
+  # Standard ImageNet-1K training schedule
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  BASE_LR: 2e-3
+  WARMUP_LR: 2e-6
+  MIN_LR: 2e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+# Distillation Configuration (Official TinyViT settings)
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  LOGITS_TOPK: 10  # Official paper uses K=10 for IN-1K
+  TEMPERATURE: 1.0
+
+AUG:
+  # Must match augmentation used when saving teacher logits!
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable Mixup/CutMix for distillation (seed replay limitation)
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 100
+SAVE_FREQ: 20

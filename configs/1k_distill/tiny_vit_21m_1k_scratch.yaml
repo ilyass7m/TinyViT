@@ -1,0 +1,89 @@
+# =============================================================================
+# EXPERIMENT B: TinyViT-21M Scratch Pretraining on ImageNet-1K (Baseline)
+# =============================================================================
+# Purpose: Baseline - train TinyViT-21M WITHOUT knowledge distillation
+#
+# Pipeline (mirrors original paper):
+#   1. Pretrain on ImageNet-1K from scratch (this config) - 300 epochs
+#   2. Finetune on CIFAR-100 (tiny_vit_21m_cifar100_finetune_from_scratch.yaml) - 30 epochs
+#   3. Evaluate on CIFAR-100
+#
+# Fair comparison setup:
+#   - Experiment A: Distillation pretraining → CIFAR-100 finetune
+#   - Experiment B (this): Scratch pretraining → CIFAR-100 finetune
+#   - Same epochs, same architecture, only training signal differs
+#
+# Key differences from Experiment A:
+#   - Uses hard labels (cross-entropy) instead of soft labels (distillation)
+#   - Mixup/CutMix ENABLED (standard augmentation for scratch training)
+#   - Drop path rate: 0.2 (higher regularization needed without teacher)
+#
+# TinyViT-21M Architecture: ~21M parameters
+#   Depths=[2,2,6,2], Heads=[3,6,12,18], Dims=[96,192,384,576]
+#
+# Usage (4 GPUs):
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_21m_1k_scratch.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/tiny_vit_21m_1k_scratch
+
+MODEL:
+  NAME: TinyViT-21M-1k-Scratch
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.2  # Official: 0.2 for 21M scratch training
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 18 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 96, 192, 384, 576 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128  # Reduced for single GPU
+  NUM_WORKERS: 16
+  PIN_MEMORY: True
+
+TRAIN:
+  # Official TinyViT schedule for IN-1K (300 epochs)
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  # LR is scaled: base_lr * batch_size * num_gpus / 512
+  # With 4 GPUs: 5e-4 * 128 * 4 / 512 = 5e-4
+  BASE_LR: 5e-4
+  WARMUP_LR: 5e-7
+  MIN_LR: 5e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0  # No layer decay during pretraining
+  AUTO_RESUME: True
+  ACCUMULATION_STEPS: 4  # Effective batch = 64 * 8 = 512
+
+# No distillation
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Official augmentation with Mixup/CutMix (enabled for scratch training)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True
+
+SEED: 0
+PRINT_FREQ: 100
+SAVE_FREQ: 20

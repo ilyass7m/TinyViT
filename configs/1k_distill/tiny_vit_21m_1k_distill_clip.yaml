@@ -1,0 +1,87 @@
+# =============================================================================
+# EXPERIMENT A: TinyViT-21M Distillation Pretraining on ImageNet-1K
+# =============================================================================
+# Purpose: Pretrain TinyViT-21M using CLIP teacher soft labels
+#
+# Pipeline (mirrors original paper):
+#   1. Pretrain on ImageNet-1K with distillation (this config) - 300 epochs
+#   2. Finetune on CIFAR-100 (tiny_vit_21m_cifar100_finetune_from_distill.yaml) - 30 epochs
+#   3. Evaluate on CIFAR-100
+#
+# Fair comparison setup:
+#   - Experiment A (this): Distillation pretraining → CIFAR-100 finetune
+#   - Experiment B: Scratch pretraining → CIFAR-100 finetune
+#   - Same epochs, same architecture, only training signal differs
+#
+# TinyViT-21M Architecture: ~21M parameters
+#   Depths=[2,2,6,2], Heads=[3,6,12,18], Dims=[96,192,384,576]
+#
+# Usage (4 GPUs):
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_21m_1k_distill_clip.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/tiny_vit_21m_1k_distill_clip \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l_1k/
+
+MODEL:
+  NAME: TinyViT-21M-1k-Distill-CLIP
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.1  # Official: 0.1 for distillation
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0  # No label smoothing with soft targets
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 18 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 96, 192, 384, 576 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128  # Per GPU (effective = 128 * num_gpus)
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  # Use CLIP normalization to match teacher preprocessing
+  MEAN_AND_STD_TYPE: clip
+
+TRAIN:
+  # Official TinyViT schedule for IN-1K (300 epochs)
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  # LR is scaled: base_lr * batch_size * num_gpus / 512
+  # With 4 GPUs: 5e-4 * 128 * 4 / 512 = 5e-4
+  BASE_LR: 5e-4
+  WARMUP_LR: 5e-7
+  MIN_LR: 5e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0  # No layer decay during pretraining
+  AUTO_RESUME: True
+
+# Distillation Configuration (Official TinyViT settings)
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  LOGITS_TOPK: 10  # Official paper uses K=10 for IN-1K (saves storage)
+  TEMPERATURE: 1.0
+
+AUG:
+  # Standard augmentation (must match what was used when saving logits!)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable Mixup/CutMix for distillation (official paper)
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 0
+PRINT_FREQ: 100
+SAVE_FREQ: 20
