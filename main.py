@@ -90,6 +90,24 @@ def main(args, config):
     lr_scheduler = build_scheduler(config, optimizer, len(
         data_loader_train) // config.TRAIN.ACCUMULATION_STEPS)
 
+    # Feature distillation setup (optional)
+    teacher_model = None
+    feature_criterion = None
+    if config.DISTILL.FEATURE_ENABLED:
+        logger.info("Feature distillation enabled - loading teacher model...")
+        from feature_distill import FeatureDistillationLoss, build_teacher_for_feature_distill
+        teacher_model = build_teacher_for_feature_distill(config)
+        if not args.only_cpu:
+            teacher_model.cuda()
+        teacher_model.eval()
+        feature_criterion = FeatureDistillationLoss(
+            student_dim=config.DISTILL.FEATURE_DIM_STUDENT,
+            teacher_dim=config.DISTILL.FEATURE_DIM_TEACHER,
+        )
+        if not args.only_cpu:
+            feature_criterion.cuda()
+        logger.info(f"Feature distillation weight: {config.DISTILL.FEATURE_WEIGHT}")
+
     if config.DISTILL.ENABLED:
         # we disable MIXUP and CUTMIX when knowledge distillation
         assert len(
@@ -149,8 +167,15 @@ def main(args, config):
         data_loader_train.sampler.set_epoch(epoch)
 
         if config.DISTILL.ENABLED:
-            train_one_epoch_distill_using_saved_logits(
-                args, config, model, criterion, data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler, loss_scaler)
+            if config.DISTILL.FEATURE_ENABLED:
+                # Logit distillation (saved) + Feature distillation (online)
+                train_one_epoch_distill_with_features(
+                    args, config, model, teacher_model, criterion, feature_criterion,
+                    data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler, loss_scaler)
+            else:
+                # Logit distillation only (saved)
+                train_one_epoch_distill_using_saved_logits(
+                    args, config, model, criterion, data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler, loss_scaler)
         else:
             train_one_epoch(args, config, model, criterion,
                             data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler, loss_scaler)
@@ -400,6 +425,160 @@ def train_one_epoch_distill_using_saved_logits(args, config, model, criterion, d
                     "train/loss_scale": scaler_meter.val,
                     "train/lr": lr,
                 }, step=normal_global_idx)
+    epoch_time = time.time() - start
+    extra_meters_str = f'Train-Summary: [{epoch}/{config.TRAIN.EPOCHS}]\t'
+    for k, v in meters.items():
+        v.sync()
+        extra_meters_str += f'{k} {v.val:.4f} ({v.avg:.4f})\t'
+    logger.info(extra_meters_str)
+    logger.info(
+        f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
+
+
+def train_one_epoch_distill_with_features(
+    args, config, model, teacher_model, criterion, feature_criterion,
+    data_loader, optimizer, epoch, mixup_fn, lr_scheduler, loss_scaler
+):
+    """
+    Training with online feature distillation.
+
+    Uses saved logits for logit distillation + live teacher for feature distillation.
+    Teacher model runs in eval mode with no gradients.
+    """
+    from feature_distill import get_student_features
+
+    model.train()
+    teacher_model.eval()
+    set_bn_state(config, model)
+    optimizer.zero_grad()
+
+    num_steps = len(data_loader)
+    batch_time = AverageMeter()
+    loss_meter = AverageMeter()
+    norm_meter = AverageMeter()
+    scaler_meter = AverageMeter()
+    meters = defaultdict(AverageMeter)
+
+    start = time.time()
+    end = time.time()
+    data_tic = time.time()
+
+    num_classes = config.MODEL.NUM_CLASSES
+    topk = config.DISTILL.LOGITS_TOPK
+    feature_weight = config.DISTILL.FEATURE_WEIGHT
+
+    for idx, ((samples, targets), (logits_index, logits_value, seeds)) in enumerate(data_loader):
+        normal_global_idx = epoch * NORM_ITER_LEN + \
+            (idx * NORM_ITER_LEN // num_steps)
+
+        samples = samples.cuda(non_blocking=True)
+        targets = targets.cuda(non_blocking=True)
+
+        if mixup_fn is not None:
+            samples, targets = mixup_fn(samples, targets, seeds)
+            original_targets = targets.argmax(dim=1)
+        else:
+            original_targets = targets
+        meters['data_time'].update(time.time() - data_tic)
+
+        # Get teacher features (no gradient)
+        with torch.no_grad():
+            _, teacher_features = teacher_model(samples)
+
+        # Get student outputs and features
+        with torch.cuda.amp.autocast(enabled=config.AMP_ENABLE):
+            outputs, student_features = get_student_features(model, samples)
+
+        # Recover teacher logits from saved data
+        logits_index = logits_index.long()
+        logits_value = logits_value.float()
+        logits_index = logits_index.cuda(non_blocking=True)
+        logits_value = logits_value.cuda(non_blocking=True)
+
+        if topk >= num_classes:
+            outputs_teacher = torch.zeros(logits_value.size(0), num_classes,
+                                         device=logits_value.device, dtype=logits_value.dtype)
+            outputs_teacher = outputs_teacher.scatter_(-1, logits_index, logits_value)
+        else:
+            minor_value = (1.0 - logits_value.sum(-1, keepdim=True)) / (num_classes - topk)
+            minor_value = minor_value.repeat_interleave(num_classes, dim=-1)
+            outputs_teacher = minor_value.scatter_(-1, logits_index, logits_value)
+
+        # Logit distillation loss (using saved logits)
+        logit_loss = criterion(outputs, outputs_teacher)
+
+        # Feature distillation loss (using live teacher features)
+        feature_loss = feature_criterion(student_features.float(), teacher_features.float())
+
+        # Combined loss
+        loss = logit_loss + feature_weight * feature_loss
+        loss = loss / config.TRAIN.ACCUMULATION_STEPS
+
+        # Backward pass
+        is_second_order = hasattr(
+            optimizer, 'is_second_order') and optimizer.is_second_order
+        grad_norm = loss_scaler(loss, optimizer, clip_grad=config.TRAIN.CLIP_GRAD,
+                                parameters=model.parameters(), create_graph=is_second_order,
+                                update_grad=(idx + 1) % config.TRAIN.ACCUMULATION_STEPS == 0)
+        if (idx + 1) % config.TRAIN.ACCUMULATION_STEPS == 0:
+            optimizer.zero_grad()
+            lr_scheduler.step_update(
+                (epoch * num_steps + idx) // config.TRAIN.ACCUMULATION_STEPS)
+        loss_scale_value = loss_scaler.state_dict().get("scale", 1.0)
+
+        # Compute accuracy
+        real_batch_size = len(original_targets)
+        acc1, acc5 = accuracy(outputs, original_targets, topk=(1, 5))
+        meters['train_acc1'].update(acc1.item(), real_batch_size)
+        meters['train_acc5'].update(acc5.item(), real_batch_size)
+        teacher_acc1, teacher_acc5 = accuracy(
+            outputs_teacher, original_targets, topk=(1, 5))
+        meters['teacher_acc1'].update(teacher_acc1.item(), real_batch_size)
+        meters['teacher_acc5'].update(teacher_acc5.item(), real_batch_size)
+        meters['logit_loss'].update(logit_loss.item(), real_batch_size)
+        meters['feature_loss'].update(feature_loss.item(), real_batch_size)
+
+        torch.cuda.synchronize()
+
+        loss_meter.update(loss.item(), real_batch_size)
+        if is_valid_grad_norm(grad_norm):
+            norm_meter.update(grad_norm)
+        scaler_meter.update(loss_scale_value)
+        batch_time.update(time.time() - end)
+        end = time.time()
+        data_tic = time.time()
+
+        if idx % config.PRINT_FREQ == 0:
+            lr = optimizer.param_groups[0]['lr']
+            memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+            etas = batch_time.avg * (num_steps - idx)
+
+            extra_meters_str = ''
+            for k, v in meters.items():
+                extra_meters_str += f'{k} {v.val:.4f} ({v.avg:.4f})\t'
+            logger.info(
+                f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
+                f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.6f}\t'
+                f'time {batch_time.val:.4f} ({batch_time.avg:.4f})\t'
+                f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
+                f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
+                f'loss_scale {scaler_meter.val:.4f} ({scaler_meter.avg:.4f})\t'
+                f'{extra_meters_str}'
+                f'mem {memory_used:.0f}MB')
+
+            if is_main_process() and args.use_wandb:
+                acc1_meter, acc5_meter = meters['train_acc1'], meters['train_acc5']
+                wandb.log({
+                    "train/acc@1": acc1_meter.val,
+                    "train/acc@5": acc5_meter.val,
+                    "train/loss": loss_meter.val,
+                    "train/logit_loss": meters['logit_loss'].val,
+                    "train/feature_loss": meters['feature_loss'].val,
+                    "train/grad_norm": norm_meter.val,
+                    "train/loss_scale": scaler_meter.val,
+                    "train/lr": lr,
+                }, step=normal_global_idx)
+
     epoch_time = time.time() - start
     extra_meters_str = f'Train-Summary: [{epoch}/{config.TRAIN.EPOCHS}]\t'
     for k, v in meters.items():

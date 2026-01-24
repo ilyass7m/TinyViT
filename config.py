@@ -85,6 +85,13 @@ _C.DISTILL.LOGITS_TOPK = 100
 _C.DISTILL.TEMPERATURE = 1.0  # Temperature for softmax in distillation
 _C.DISTILL.ALPHA = 0.5  # Weight for KL loss: L = (1-alpha)*CE + alpha*KL
 
+# Feature Distillation (extension)
+_C.DISTILL.FEATURE_ENABLED = False  # Enable feature distillation
+_C.DISTILL.FEATURE_WEIGHT = 0.5  # Beta weight for feature loss
+_C.DISTILL.FEATURE_DIM_TEACHER = 768  # CLIP-ViT-L/14 feature dimension
+_C.DISTILL.FEATURE_DIM_STUDENT = 320  # TinyViT-5M feature dimension
+_C.DISTILL.TEACHER_CHECKPOINT = ''  # Path to teacher checkpoint for online distillation
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------

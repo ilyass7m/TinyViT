@@ -1,0 +1,63 @@
+# =============================================================================
+# STEP 0: Finetune CLIP-ViT-L/14 on ImageNet-1K
+# =============================================================================
+# CLIP was trained for image-text contrastive learning, not classification.
+# We finetune the classification head on ImageNet-1K to get ~85% accuracy.
+# The visual encoder is frozen - only the head is trained.
+#
+# Usage:
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 main.py \
+#     --cfg configs/experiments/step0_clip_finetune.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/exp_clip_finetune
+#
+# Expected: ~85% top-1 accuracy
+# Time: ~4-6 hours on 1 GPU (20 epochs)
+
+MODEL:
+  NAME: CLIP-ViT-L-Finetune
+  TYPE: clip_vit_large_patch14
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 1024
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  MEAN_AND_STD_TYPE: clip
+
+TRAIN:
+  EPOCHS: 20
+  WARMUP_EPOCHS: 2
+  BASE_LR: 1e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.01
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0
+  AUTO_RESUME: True
+  EVAL_BN_WHEN_TRAINING: True  # Freeze visual encoder
+
+DISTILL:
+  ENABLED: False
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 500
+SAVE_FREQ: 5

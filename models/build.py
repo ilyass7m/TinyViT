@@ -66,13 +66,30 @@ def build_model(config):
         # Create a wrapper that adds classification head
         class CLIPVisionClassifier(nn.Module):
             """CLIP visual encoder with classification head."""
-            def __init__(self, clip_model, num_classes):
+            def __init__(self, clip_model, num_classes, freeze_visual=False):
                 super().__init__()
                 self.visual = clip_model.visual
                 # ViT-L/14 has output dim of 768
                 self.head = nn.Linear(768, num_classes)
                 nn.init.zeros_(self.head.bias)
                 nn.init.trunc_normal_(self.head.weight, std=0.02)
+
+                # Optionally freeze visual encoder (for head-only finetuning)
+                self.freeze_visual = freeze_visual
+                if freeze_visual:
+                    for param in self.visual.parameters():
+                        param.requires_grad = False
+                    # Set visual encoder to eval mode permanently
+                    self.visual.eval()
+                    print("CLIP visual encoder frozen - only training classification head")
+
+            def train(self, mode=True):
+                """Override train to keep visual encoder in eval mode when frozen."""
+                super().train(mode)
+                if self.freeze_visual:
+                    # Always keep visual encoder in eval mode
+                    self.visual.eval()
+                return self
 
             def forward(self, x):
                 features = self.visual(x)
@@ -81,7 +98,9 @@ def build_model(config):
             def forward_features(self, x):
                 return self.visual(x)
 
-        model = CLIPVisionClassifier(clip_model, config.MODEL.NUM_CLASSES)
+        # Freeze visual encoder when finetuning (EVAL_BN_WHEN_TRAINING as proxy flag)
+        freeze_visual = getattr(config.TRAIN, 'EVAL_BN_WHEN_TRAINING', False)
+        model = CLIPVisionClassifier(clip_model, config.MODEL.NUM_CLASSES, freeze_visual=freeze_visual)
         print(f"Built CLIP-ViT-L/14 classifier with {config.MODEL.NUM_CLASSES} classes")
     elif model_type in ['resnet50', 'resnet101', 'resnet152']:
         # ResNet models for teacher distillation
@@ -104,9 +123,13 @@ def build_model(config):
         else:
             model = model_fn(weights=None)
 
-        # Replace the classifier head for the target number of classes
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, config.MODEL.NUM_CLASSES)
+        # Only replace the classifier head if num_classes differs from pretrained (1000)
+        if config.MODEL.NUM_CLASSES != 1000:
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs, config.MODEL.NUM_CLASSES)
+            print(f"Replaced fc layer for {config.MODEL.NUM_CLASSES} classes")
+        else:
+            print(f"Keeping pretrained fc layer for {config.MODEL.NUM_CLASSES} classes")
     elif model_type in ['efficientnet_b0', 'efficientnet_b3', 'efficientnet_b4']:
         # EfficientNet models for teacher distillation
         import timm
