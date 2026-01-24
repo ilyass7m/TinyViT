@@ -1,0 +1,80 @@
+# =============================================================================
+# CIFAR-100 Fine-tuning: TinyViT-21M from Scratch Pretraining (Baseline)
+# =============================================================================
+# Purpose: Finetune scratch-pretrained TinyViT-21M on CIFAR-100
+#
+# This is Step 2 of Experiment B (Baseline):
+#   Step 1: Pretrain on IN-1K from scratch (300 epochs) ✓
+#   Step 2: Finetune on CIFAR-100 (this config) - 30 epochs
+#   Step 3: Evaluate on CIFAR-100
+#
+# Hyperparameters (SAME as Experiment A for fair comparison):
+#   - 30 epochs
+#   - LR: 2.5e-4 with layer-wise decay (0.8)
+#   - Weight decay: 1e-8
+#   - No Mixup/CutMix
+#
+# Usage:
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 main.py \
+#     --cfg configs/cifar100/tiny_vit_21m_cifar100_finetune_from_scratch.yaml \
+#     --data-path ./data \
+#     --pretrained ./output/tiny_vit_21m_1k_scratch/TinyViT-21M-1k-Scratch/default/ckpt_epoch_299.pth \
+#     --output ./output/cifar100_eval/tiny_vit_21m_scratch
+
+MODEL:
+  NAME: TinyViT-21M-CIFAR100-FromScratch
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.1  # Lower for finetuning
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 18 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 96, 192, 384, 576 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 64
+  NUM_WORKERS: 4
+  PIN_MEMORY: True
+  # Default normalization (ImageNet stats) - same as pretraining
+  MEAN_AND_STD_TYPE: default
+
+TRAIN:
+  # Official TinyViT finetuning schedule
+  EPOCHS: 30  # Official: 30 epochs for finetuning
+  WARMUP_EPOCHS: 5
+  BASE_LR: 2.5e-4  # Official finetuning LR
+  WARMUP_LR: 2.5e-7
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 1e-8  # Official: very small weight decay for finetuning
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.8  # Official: 0.8 for finetuning
+  AUTO_RESUME: True
+  EVAL_BN_WHEN_TRAINING: True  # Official setting
+
+# No distillation during fine-tuning
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Official finetuning: disable Mixup/CutMix
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0  # Official: disabled for finetuning
+  CUTMIX: 0.0  # Official: disabled for finetuning
+
+TEST:
+  CROP: True
+
+SEED: 0
+PRINT_FREQ: 50
+SAVE_FREQ: 10
