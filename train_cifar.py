@@ -718,7 +718,7 @@ def main():
             }, os.path.join(args.output, 'best.pth'))
 
         # Save periodic checkpoint
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 10 == 0:
             save_checkpoint({
                 'epoch': epoch,
                 'model': model.state_dict(),

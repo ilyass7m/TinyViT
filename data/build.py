@@ -84,6 +84,9 @@ def build_loader(config):
         pin_memory=config.DATA.PIN_MEMORY,
         # modified for TinyViT, we save logits of all samples
         drop_last=not config.DISTILL.SAVE_TEACHER_LOGITS,
+        # Performance optimizations
+        persistent_workers=config.DATA.NUM_WORKERS > 0,  # Keep workers alive between epochs
+        prefetch_factor=4 if config.DATA.NUM_WORKERS > 0 else None,  # Prefetch more batches
     )
 
     data_loader_val = torch.utils.data.DataLoader(
@@ -92,7 +95,9 @@ def build_loader(config):
         shuffle=False,
         num_workers=config.DATA.NUM_WORKERS,
         pin_memory=config.DATA.PIN_MEMORY,
-        drop_last=False
+        drop_last=False,
+        persistent_workers=config.DATA.NUM_WORKERS > 0,
+        prefetch_factor=4 if config.DATA.NUM_WORKERS > 0 else None,
     )
 
     # setup mixup / cutmix

@@ -176,6 +176,8 @@ _C.TEST.CROP = True
 
 # Enable Pytorch automatic mixed precision (amp).
 _C.AMP_ENABLE = True
+# Enable torch.compile() for PyTorch 2.0+ (10-30% speedup, but slower first epoch)
+_C.COMPILE = False
 # Path to output folder, overwritten by command line argument
 _C.OUTPUT = ''
 # Tag of experiment, overwritten by command line argument

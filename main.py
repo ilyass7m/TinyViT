@@ -78,6 +78,11 @@ def main(args, config):
     else:
         model_without_ddp = model
 
+    # torch.compile() for PyTorch 2.0+ - can give 10-30% speedup
+    if hasattr(torch, 'compile') and config.get('COMPILE', False):
+        logger.info("Compiling model with torch.compile()...")
+        model = torch.compile(model)
+
     loss_scaler = NativeScalerWithGradNormCount(grad_scaler_enabled=config.AMP_ENABLE)
 
     n_parameters = sum(p.numel()
@@ -245,7 +250,7 @@ def train_one_epoch(args, config, model, criterion, data_loader, optimizer, epoc
         else:
             original_targets = targets
 
-        with torch.cuda.amp.autocast(enabled=config.AMP_ENABLE):
+        with torch.amp.autocast('cuda', enabled=config.AMP_ENABLE):
             outputs = model(samples)
 
         loss = criterion(outputs, targets)
@@ -268,8 +273,7 @@ def train_one_epoch(args, config, model, criterion, data_loader, optimizer, epoc
         acc1_meter.update(acc1.item(), targets.size(0))
         acc5_meter.update(acc5.item(), targets.size(0))
 
-        torch.cuda.synchronize()
-
+        # Note: removed torch.cuda.synchronize() - it was blocking every iteration
         loss_meter.update(loss.item(), targets.size(0))
         if is_valid_grad_norm(grad_norm):
             norm_meter.update(grad_norm)
@@ -339,7 +343,7 @@ def train_one_epoch_distill_using_saved_logits(args, config, model, criterion, d
             original_targets = targets
         meters['data_time'].update(time.time() - data_tic)
 
-        with torch.cuda.amp.autocast(enabled=config.AMP_ENABLE):
+        with torch.amp.autocast('cuda', enabled=config.AMP_ENABLE):
             outputs = model(samples)
 
         # recover teacher logits
@@ -387,8 +391,7 @@ def train_one_epoch_distill_using_saved_logits(args, config, model, criterion, d
         meters['teacher_acc1'].update(teacher_acc1.item(), real_batch_size)
         meters['teacher_acc5'].update(teacher_acc5.item(), real_batch_size)
 
-        torch.cuda.synchronize()
-
+        # Note: removed torch.cuda.synchronize() - it was blocking every iteration
         loss_meter.update(loss.item(), real_batch_size)
         if is_valid_grad_norm(grad_norm):
             norm_meter.update(grad_norm)
@@ -486,7 +489,7 @@ def train_one_epoch_distill_with_features(
             _, teacher_features = teacher_model(samples)
 
         # Get student outputs and features
-        with torch.cuda.amp.autocast(enabled=config.AMP_ENABLE):
+        with torch.amp.autocast('cuda', enabled=config.AMP_ENABLE):
             outputs, student_features = get_student_features(model, samples)
 
         # Recover teacher logits from saved data
@@ -538,8 +541,7 @@ def train_one_epoch_distill_with_features(
         meters['logit_loss'].update(logit_loss.item(), real_batch_size)
         meters['feature_loss'].update(feature_loss.item(), real_batch_size)
 
-        torch.cuda.synchronize()
-
+        # Note: removed torch.cuda.synchronize() - it was blocking every iteration
         loss_meter.update(loss.item(), real_batch_size)
         if is_valid_grad_norm(grad_norm):
             norm_meter.update(grad_norm)
@@ -606,7 +608,7 @@ def validate(args, config, data_loader, model, num_classes=1000):
             target = target.cuda(non_blocking=True)
 
         # compute output
-        with torch.cuda.amp.autocast(enabled=config.AMP_ENABLE):
+        with torch.amp.autocast('cuda', enabled=config.AMP_ENABLE):
             output = model(images)
         if num_classes == 1000:
             output_num_classes = output.size(-1)
@@ -660,12 +662,12 @@ def throughput(data_loader, model, logger):
     torch.cuda.synchronize()
 
     start = time.time()
-    with torch.cuda.amp.autocast():
+    with torch.amp.autocast('cuda'):
         while time.time() - start < T0:
             model(inputs)
     timing = []
     torch.cuda.synchronize()
-    with torch.cuda.amp.autocast():
+    with torch.amp.autocast('cuda'):
         while sum(timing) < T1:
             start = time.time()
             model(inputs)
@@ -707,6 +709,10 @@ if __name__ == '__main__':
     np.random.seed(seed)
     random.seed(seed)
     cudnn.benchmark = True
+
+    # Enable TF32 for Ampere+ GPUs (A10, A100, RTX 30xx/40xx) - significant speedup
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
 
     # linear scale the learning rate according to total batch size, may not be optimal
     linear_scaled_lr = config.TRAIN.BASE_LR * \
