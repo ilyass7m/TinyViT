@@ -13,6 +13,8 @@
 
 # Data directory (contains large datasets)
 data/cifar-100-python/
+output/
+teacher_logits_resnet50/
 
 # Training checkpoints
 checkpoint*

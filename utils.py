@@ -10,6 +10,7 @@ import os
 import torch
 import torch.distributed as dist
 import subprocess
+import yacs.config
 
 
 def add_common_args(parser):
@@ -61,6 +62,7 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, loss_scaler, logger)
         checkpoint = torch.hub.load_state_dict_from_url(
             config.MODEL.RESUME, map_location='cpu', check_hash=True)
     else:
+        torch.serialization.add_safe_globals([yacs.config.CfgNode])
         checkpoint = torch.load(config.MODEL.RESUME, map_location='cpu')
 
     params = checkpoint['model']

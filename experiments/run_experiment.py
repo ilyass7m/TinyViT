@@ -141,7 +141,7 @@ def apply_overrides(config: ExperimentConfig, args) -> ExperimentConfig:
     config.output_dir = args.output_dir
     config.data.data_path = args.data_path
     config.seed = args.seed
-    config.device = args.device
+    config.device = args.device 
 
     if args.batch_size:
         config.data.batch_size = args.batch_size

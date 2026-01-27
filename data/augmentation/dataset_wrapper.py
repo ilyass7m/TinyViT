@@ -23,6 +23,23 @@ class DatasetWrapper(torch.utils.data.Dataset):
         self.write_mode = write
         self.keys = self._get_keys()
         self._manager = (None, None)
+        # Detect number of available logits epochs for cycling
+        self.num_logits_epochs = self._count_logits_epochs() if not write else None
+
+    def _count_logits_epochs(self):
+        """Count how many epochs of logits are available for cycling."""
+        if not os.path.isdir(self.logits_path):
+            return None
+        count = 0
+        while True:
+            epoch_path = os.path.join(self.logits_path, f'logits_top{self.topk}_epoch{count}')
+            if os.path.isdir(epoch_path):
+                count += 1
+            else:
+                break
+        if count > 0:
+            print(f"[DatasetWrapper] Found {count} epochs of saved logits, will cycle through them")
+        return count if count > 0 else None
 
     def __getitem__(self, index: int):
         if self.write_mode:
@@ -71,9 +88,15 @@ class DatasetWrapper(torch.utils.data.Dataset):
 
     def get_manager(self):
         epoch = self.epoch.value
+        # Cycle through available logits epochs if we have fewer saved than training epochs
+        if self.num_logits_epochs is not None and self.num_logits_epochs > 0:
+            effective_epoch = epoch % self.num_logits_epochs
+        else:
+            effective_epoch = epoch
+
         if epoch != self._manager[0]:
             logits_path = os.path.join(
-                self.logits_path, f'logits_top{self.topk}_epoch{self.epoch.value}')
+                self.logits_path, f'logits_top{self.topk}_epoch{effective_epoch}')
             self._manager = (epoch, self._build_manager(logits_path))
         return self._manager[1]
 
