@@ -36,8 +36,8 @@ DATA:
   DATASET: imagenet
   IMG_SIZE: 336  # Native resolution for this model
   INTERPOLATION: bicubic
-  BATCH_SIZE: 384  # Optimal for A40 48GB at 336x336 (uses ~30-35GB)
-  NUM_WORKERS: 12  # Optimal for 2 GPUs with full system resources
+  BATCH_SIZE: 128  # Optimal for A40 48GB at 336x336 (uses ~30-35GB)
+  NUM_WORKERS: 8  # Optimal for 2 GPUs with full system resources
   PIN_MEMORY: True
   # Use default ImageNet normalization (model was finetuned with it)
   MEAN_AND_STD_TYPE: default
