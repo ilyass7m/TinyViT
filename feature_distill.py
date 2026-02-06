@@ -227,24 +227,60 @@ def build_teacher_for_feature_distill(config):
     """
     from models import build_model
 
-    # Temporarily modify config to build teacher
-    # We need to build CLIP model, not TinyViT
-    original_type = config.MODEL.TYPE
+    teacher_type = config.DISTILL.TEACHER_TYPE
+    print(f"Building teacher model of type: {teacher_type}")
 
-    # Build CLIP model
+    # Store original config values
+    original_type = config.MODEL.TYPE
+    original_tiny_vit = None
+
     config.defrost()
-    config.MODEL.TYPE = 'clip_vit_large_patch14'
+
+    if teacher_type == 'tiny_vit':
+        # Build TinyViT teacher with specified architecture
+        config.MODEL.TYPE = 'tiny_vit'
+        # Store original TinyViT config
+        original_tiny_vit = {
+            'EMBED_DIMS': list(config.MODEL.TINY_VIT.EMBED_DIMS),
+            'DEPTHS': list(config.MODEL.TINY_VIT.DEPTHS),
+            'NUM_HEADS': list(config.MODEL.TINY_VIT.NUM_HEADS),
+            'WINDOW_SIZES': list(config.MODEL.TINY_VIT.WINDOW_SIZES),
+            'MLP_RATIO': config.MODEL.TINY_VIT.MLP_RATIO,
+            'MBCONV_EXPAND_RATIO': config.MODEL.TINY_VIT.MBCONV_EXPAND_RATIO,
+            'LOCAL_CONV_SIZE': config.MODEL.TINY_VIT.LOCAL_CONV_SIZE,
+        }
+        # Apply teacher TinyViT architecture
+        config.MODEL.TINY_VIT.EMBED_DIMS = list(config.DISTILL.TEACHER_TINY_VIT.EMBED_DIMS)
+        config.MODEL.TINY_VIT.DEPTHS = list(config.DISTILL.TEACHER_TINY_VIT.DEPTHS)
+        config.MODEL.TINY_VIT.NUM_HEADS = list(config.DISTILL.TEACHER_TINY_VIT.NUM_HEADS)
+        config.MODEL.TINY_VIT.WINDOW_SIZES = list(config.DISTILL.TEACHER_TINY_VIT.WINDOW_SIZES)
+        config.MODEL.TINY_VIT.MLP_RATIO = config.DISTILL.TEACHER_TINY_VIT.MLP_RATIO
+        config.MODEL.TINY_VIT.MBCONV_EXPAND_RATIO = config.DISTILL.TEACHER_TINY_VIT.MBCONV_EXPAND_RATIO
+        config.MODEL.TINY_VIT.LOCAL_CONV_SIZE = config.DISTILL.TEACHER_TINY_VIT.LOCAL_CONV_SIZE
+    else:
+        # For other model types (vit_base_patch16_224, clip_vit_large_patch14, resnet152, etc.)
+        config.MODEL.TYPE = teacher_type
+
     config.freeze()
 
+    # Build teacher model
     teacher = build_model(config)
 
-    # Restore original model type
+    # Restore original config
     config.defrost()
     config.MODEL.TYPE = original_type
+    if original_tiny_vit is not None:
+        config.MODEL.TINY_VIT.EMBED_DIMS = original_tiny_vit['EMBED_DIMS']
+        config.MODEL.TINY_VIT.DEPTHS = original_tiny_vit['DEPTHS']
+        config.MODEL.TINY_VIT.NUM_HEADS = original_tiny_vit['NUM_HEADS']
+        config.MODEL.TINY_VIT.WINDOW_SIZES = original_tiny_vit['WINDOW_SIZES']
+        config.MODEL.TINY_VIT.MLP_RATIO = original_tiny_vit['MLP_RATIO']
+        config.MODEL.TINY_VIT.MBCONV_EXPAND_RATIO = original_tiny_vit['MBCONV_EXPAND_RATIO']
+        config.MODEL.TINY_VIT.LOCAL_CONV_SIZE = original_tiny_vit['LOCAL_CONV_SIZE']
     config.freeze()
 
-    # Load teacher checkpoint if provided
-    if hasattr(config.DISTILL, 'TEACHER_CHECKPOINT') and config.DISTILL.TEACHER_CHECKPOINT:
+    # Load teacher checkpoint (required for online distillation)
+    if config.DISTILL.TEACHER_CHECKPOINT:
         checkpoint = torch.load(config.DISTILL.TEACHER_CHECKPOINT, map_location='cpu')
         if 'model' in checkpoint:
             state_dict = checkpoint['model']
@@ -252,6 +288,8 @@ def build_teacher_for_feature_distill(config):
             state_dict = checkpoint
         teacher.load_state_dict(state_dict, strict=False)
         print(f"Loaded teacher checkpoint: {config.DISTILL.TEACHER_CHECKPOINT}")
+    else:
+        print("WARNING: No teacher checkpoint provided. Using randomly initialized teacher.")
 
     return TeacherModelWrapper(teacher)
 
@@ -270,3 +308,99 @@ def get_student_features(model, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Te
     logits = model.head(features)
 
     return logits, features
+
+
+class OnlineDistillationLoss(nn.Module):
+    """
+    Online distillation loss for training with live teacher forward passes.
+
+    Supports two modes:
+    1. Logits-only: L = KL(student_logits, teacher_logits)
+    2. Logits + Features: L = KL(student_logits, teacher_logits) + β * L_feature
+
+    This is designed to be backward-compatible with the saved-logits approach
+    while adding optional feature distillation.
+    """
+    def __init__(
+        self,
+        temperature: float = 1.0,
+        feature_enabled: bool = False,
+        feature_weight: float = 0.5,
+        student_dim: int = 320,
+        teacher_dim: int = 576,
+    ):
+        super().__init__()
+        self.temperature = temperature
+        self.feature_enabled = feature_enabled
+        self.feature_weight = feature_weight
+
+        if feature_enabled:
+            self.feature_loss = FeatureDistillationLoss(
+                student_dim=student_dim,
+                teacher_dim=teacher_dim,
+            )
+        else:
+            self.feature_loss = None
+
+    def forward(
+        self,
+        student_logits: torch.Tensor,
+        teacher_logits: torch.Tensor,
+        student_features: Optional[torch.Tensor] = None,
+        teacher_features: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, dict]:
+        """
+        Compute online distillation loss.
+
+        Args:
+            student_logits: Student predictions [B, num_classes]
+            teacher_logits: Teacher predictions [B, num_classes]
+            student_features: Optional student features [B, student_dim]
+            teacher_features: Optional teacher features [B, teacher_dim]
+
+        Returns:
+            total_loss: Combined loss value
+            loss_dict: Dictionary with individual loss components for logging
+        """
+        # KL divergence loss on logits
+        student_log_probs = F.log_softmax(student_logits / self.temperature, dim=-1)
+        teacher_probs = F.softmax(teacher_logits / self.temperature, dim=-1)
+
+        kl_loss = F.kl_div(student_log_probs, teacher_probs, reduction='batchmean')
+        kl_loss = kl_loss * (self.temperature ** 2)  # Scale by T^2
+
+        loss_dict = {
+            'kl_loss': kl_loss.item(),
+        }
+
+        total_loss = kl_loss
+
+        # Feature distillation loss (optional)
+        if self.feature_enabled and student_features is not None and teacher_features is not None:
+            feat_loss = self.feature_loss(student_features, teacher_features)
+            total_loss = total_loss + self.feature_weight * feat_loss
+            loss_dict['feature_loss'] = feat_loss.item()
+            loss_dict['feature_weight'] = self.feature_weight
+
+        loss_dict['total_loss'] = total_loss.item()
+
+        return total_loss, loss_dict
+
+
+def build_online_distill_loss(config) -> OnlineDistillationLoss:
+    """
+    Build online distillation loss module from config.
+
+    Args:
+        config: Config with DISTILL settings
+
+    Returns:
+        OnlineDistillationLoss module
+    """
+    return OnlineDistillationLoss(
+        temperature=config.DISTILL.TEMPERATURE,
+        feature_enabled=config.DISTILL.FEATURE_ENABLED,
+        feature_weight=config.DISTILL.FEATURE_WEIGHT,
+        student_dim=config.DISTILL.FEATURE_DIM_STUDENT,
+        teacher_dim=config.DISTILL.FEATURE_DIM_TEACHER,
+    )

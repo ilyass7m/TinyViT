@@ -1,1 +1,12 @@
-run-20260115_221030-kkjc1yi1/logs/debug-internal.log
+{"time":"2026-01-15T22:10:31.634379666Z","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2026-01-15T22:10:31.962130873Z","level":"INFO","msg":"stream: created new stream","id":"kkjc1yi1"}
+{"time":"2026-01-15T22:10:31.964364065Z","level":"INFO","msg":"handler: started","stream_id":"kkjc1yi1"}
+{"time":"2026-01-15T22:10:31.970485547Z","level":"INFO","msg":"stream: started","id":"kkjc1yi1"}
+{"time":"2026-01-15T22:10:31.970689827Z","level":"INFO","msg":"writer: started","stream_id":"kkjc1yi1"}
+{"time":"2026-01-15T22:10:31.970732879Z","level":"INFO","msg":"sender: started","stream_id":"kkjc1yi1"}
+{"time":"2026-01-15T22:50:32.949756108Z","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/ilyass7m-centralesup-lec/TinyViT/kkjc1yi1/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2026-01-16T00:16:43.726338534Z","level":"INFO","msg":"stream: closing","id":"kkjc1yi1"}
+{"time":"2026-01-16T00:16:44.721527296Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-01-16T00:16:45.058749067Z","level":"INFO","msg":"handler: closed","stream_id":"kkjc1yi1"}
+{"time":"2026-01-16T00:16:45.073329107Z","level":"INFO","msg":"sender: closed","stream_id":"kkjc1yi1"}
+{"time":"2026-01-16T00:16:45.074208042Z","level":"INFO","msg":"stream: closed","id":"kkjc1yi1"}

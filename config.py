@@ -92,6 +92,20 @@ _C.DISTILL.FEATURE_DIM_TEACHER = 768  # CLIP-ViT-L/14 feature dimension
 _C.DISTILL.FEATURE_DIM_STUDENT = 320  # TinyViT-5M feature dimension
 _C.DISTILL.TEACHER_CHECKPOINT = ''  # Path to teacher checkpoint for online distillation
 
+# Online Distillation (teacher forward pass each batch)
+_C.DISTILL.ONLINE_DISTILL = False  # If True, use live teacher forward instead of saved logits
+_C.DISTILL.TEACHER_TYPE = 'tiny_vit'  # Teacher model type: 'tiny_vit', 'vit_base_patch16_224', etc.
+
+# Teacher TinyViT architecture (only used when TEACHER_TYPE='tiny_vit' and ONLINE_DISTILL=True)
+_C.DISTILL.TEACHER_TINY_VIT = CN()
+_C.DISTILL.TEACHER_TINY_VIT.EMBED_DIMS = [96, 192, 384, 576]  # TinyViT-21M default
+_C.DISTILL.TEACHER_TINY_VIT.DEPTHS = [2, 2, 6, 2]
+_C.DISTILL.TEACHER_TINY_VIT.NUM_HEADS = [3, 6, 12, 18]
+_C.DISTILL.TEACHER_TINY_VIT.WINDOW_SIZES = [7, 7, 14, 7]
+_C.DISTILL.TEACHER_TINY_VIT.MLP_RATIO = 4.
+_C.DISTILL.TEACHER_TINY_VIT.MBCONV_EXPAND_RATIO = 4.0
+_C.DISTILL.TEACHER_TINY_VIT.LOCAL_CONV_SIZE = 3
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------
