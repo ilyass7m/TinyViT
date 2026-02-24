@@ -190,7 +190,7 @@ def save_teacher_logits(
     )
 
     # Load checkpoint
-    checkpoint = torch.load(teacher_checkpoint, map_location='cpu')
+    checkpoint = torch.load(teacher_checkpoint, map_location='cpu', weights_only = False)
     if 'model' in checkpoint:
         teacher.load_state_dict(checkpoint['model'])
     else:

@@ -19,8 +19,8 @@ DATA:
   DATASET: cifar100
   IMG_SIZE: 224
   INTERPOLATION: bicubic
-  BATCH_SIZE: 256
-  NUM_WORKERS: 8
+  BATCH_SIZE: 32
+  NUM_WORKERS: 4
   PIN_MEMORY: True
 
 TRAIN:
@@ -37,7 +37,7 @@ DISTILL:
   # For CIFAR-100: Save top-50 class probabilities
   # Remaining 50 classes share the leftover probability (dark knowledge preserved)
   # This halves storage while keeping distillation effective
-  LOGITS_TOPK: 50
+  LOGITS_TOPK: 75
 
 AUG:
   # Same augmentation as student training

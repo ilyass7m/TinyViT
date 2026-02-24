@@ -46,10 +46,10 @@ DATA:
   MEAN_AND_STD_TYPE: default
 
 TRAIN:
-  # Official TinyViT finetuning schedule
-  EPOCHS: 30  # Official: 30 epochs for finetuning
+  
+  EPOCHS: 25  
   WARMUP_EPOCHS: 5
-  BASE_LR: 2.5e-4  # Official finetuning LR
+  BASE_LR: 2.5e-4  
   WARMUP_LR: 2.5e-7
   MIN_LR: 1e-5
   WEIGHT_DECAY: 1e-8  # Official: very small weight decay for finetuning
@@ -77,4 +77,4 @@ TEST:
 
 SEED: 0
 PRINT_FREQ: 50
-SAVE_FREQ: 10
+SAVE_FREQ: 5

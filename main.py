@@ -67,6 +67,23 @@ def main(args, config):
     if args.use_sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
+    # Freeze early stages for faster finetuning
+    freeze_stages = config.TRAIN.FREEZE_STAGES
+    if freeze_stages > 0 and hasattr(model, 'patch_embed'):
+        frozen_params = 0
+        # Freeze patch_embed
+        for param in model.patch_embed.parameters():
+            param.requires_grad = False
+            frozen_params += param.numel()
+        # Freeze specified number of stages
+        for i in range(min(freeze_stages, len(model.layers))):
+            for param in model.layers[i].parameters():
+                param.requires_grad = False
+                frozen_params += param.numel()
+        total_params = sum(p.numel() for p in model.parameters())
+        logger.info(f"Frozen {freeze_stages} stages: {frozen_params:,} / {total_params:,} params "
+                    f"({100*frozen_params/total_params:.1f}%) - Only training {total_params-frozen_params:,} params")
+
     logger.info(str(model))
 
     optimizer = build_optimizer(config, model)

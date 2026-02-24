@@ -171,7 +171,7 @@ def load_pretrained_weights(model, pretrained_path, num_classes, device):
     else:
         # Load from local checkpoint
         print(f"Loading pretrained weights from: {pretrained_path}")
-        checkpoint = torch.load(pretrained_path, map_location=device)
+        checkpoint = torch.load(pretrained_path, map_location=device, weights_only = False)
         if 'model' in checkpoint:
             pretrained_state = checkpoint['model']
         else:

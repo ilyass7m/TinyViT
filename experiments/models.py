@@ -353,7 +353,7 @@ def load_checkpoint(
     """
     print(f"Loading checkpoint: {checkpoint_path}")
 
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only = False)
 
     # Handle different checkpoint formats
     if 'model' in checkpoint:

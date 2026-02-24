@@ -121,6 +121,8 @@ _C.TRAIN.MIN_LR = 5e-6
 _C.TRAIN.CLIP_GRAD = 5.0
 # Auto resume from latest checkpoint
 _C.TRAIN.AUTO_RESUME = True
+# Freeze early layers for faster finetuning (0=none, 1=stage1, 2=stage1+2, 3=stage1+2+3)
+_C.TRAIN.FREEZE_STAGES = 0
 # Gradient accumulation steps
 # could be overwritten by command line argument
 _C.TRAIN.ACCUMULATION_STEPS = 1

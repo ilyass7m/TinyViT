@@ -26,7 +26,7 @@ DATA:
   DATASET: cifar100
   IMG_SIZE: 224
   INTERPOLATION: bicubic
-  BATCH_SIZE: 256
+  BATCH_SIZE: 64
   NUM_WORKERS: 8
   PIN_MEMORY: True
 
@@ -46,7 +46,7 @@ DISTILL:
   ENABLED: True
   TEACHER_LOGITS_PATH: ''  # Set via --opts
   # Must match what was used when saving logits!
-  LOGITS_TOPK: 50
+  LOGITS_TOPK: 75
 
 AUG:
   # Must match augmentation used when saving teacher logits
@@ -62,5 +62,5 @@ AUG:
 TEST:
   CROP: True
 
-PRINT_FREQ: 20
-SAVE_FREQ: 10
+PRINT_FREQ: 50
+SAVE_FREQ: 20

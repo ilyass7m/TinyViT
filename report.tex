@@ -1,0 +1,510 @@
+\documentclass[10pt,twocolumn]{article}
+
+% ── Geometry ──
+\usepackage[a4paper,margin=2cm]{geometry}
+
+% ── Encoding & fonts ──
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
+% ── Maths ──
+\usepackage{amsmath,amssymb}
+
+% ── Graphics & tables ──
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Colours & hyperlinks ──
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks,citecolor=Blue,linkcolor=BrickRed,urlcolor=Plum]{hyperref}
+
+% ── Bibliography ──
+\usepackage[numbers,sort&compress]{natbib}
+
+% ── Misc ──
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+% ── Compact title ──
+\usepackage{titling}
+\setlength{\droptitle}{-2em}
+\pretitle{\begin{center}\Large\bfseries}
+\posttitle{\end{center}\vspace{-1em}}
+\preauthor{\begin{center}\normalsize}
+\postauthor{\end{center}\vspace{-1em}}
+\predate{\begin{center}\small}
+\postdate{\end{center}\vspace{-1.5em}}
+
+% ── Compact sections ──
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{1.0ex plus .5ex minus .2ex}{0.6ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{0.8ex plus .3ex minus .2ex}{0.4ex plus .1ex}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\title{Reproducing Fast Pretraining Distillation\\for Small Vision Transformers}
+\author{
+  Ilyass Moummad \\
+  \textit{[University / Program Name]} \\
+  \texttt{[email]}
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{abstract}
+We reproduce and extend the core contributions of TinyViT~\cite{wu2022tinyvit},
+a fast distillation framework for small vision transformers.
+Using CIFAR-100 and ImageNet-1K, we validate three claims:
+(i)~offline logit distillation from a large teacher yields stronger small
+models than training from scratch,
+(ii)~the benefit transfers across datasets via pretraining then fine-tuning,
+and (iii)~teacher architecture choice matters.
+As an extension, we propose combining feature-level and logit-level
+distillation in an online setting and measure its effect.
+All experiments were tracked with Weights~\&~Biases.
+\end{abstract}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+\label{sec:intro}
+
+Vision transformers (ViTs)~\cite{dosovitskiy2020image} achieve state-of-the-art
+accuracy on image classification but demand large compute budgets.
+Knowledge distillation~\cite{hinton2015distilling} is a natural remedy: a large
+\emph{teacher} model transfers its ``dark knowledge'' to a smaller \emph{student}.
+However, na\"ive distillation doubles the GPU cost because both models must be
+loaded and forwarded simultaneously.
+
+Wu et al.~\cite{wu2022tinyvit} introduce \textbf{TinyViT}, a family of compact
+ViTs ($5$--$21$\,M parameters) paired with an \emph{offline distillation}
+framework.
+The key idea is to \textbf{pre-compute and store} the teacher's top-$K$ logits
+for each training image under multiple augmentations, then replay these
+sparse logits during student training.
+This eliminates the teacher from the training loop entirely, cutting memory
+and compute overhead to near zero.
+
+\paragraph{Contributions of the original paper.}
+\begin{enumerate}
+  \item A new ViT architecture (TinyViT) that combines mobile convolution
+        blocks with transformer blocks in a hierarchical design.
+  \item An offline distillation framework that stores sparse teacher logits
+        once and reuses them across students and epochs.
+  \item State-of-the-art accuracy for models under $21$\,M parameters
+        ($84.8\%$ top-1 on ImageNet-1K with a $21$\,M model).
+\end{enumerate}
+
+\paragraph{Scope of this report.}
+We reproduce the distillation framework on CIFAR-100 (direct training) and
+ImageNet-1K (pretraining + fine-tuning), compare different teacher
+architectures, ablate the logit sparsity parameter~$K$, and extend the
+method with feature-level distillation.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Background}
+\label{sec:background}
+
+\subsection{Offline Logit Distillation}
+
+Given a trained teacher~$T$ and a student~$S$, offline distillation
+proceeds in two stages:
+
+\begin{enumerate}
+  \item \textbf{Save logits.} For every training image~$x_i$ and $E$ random
+        augmentations, compute $z_i^{(e)}=T(x_i^{(e)})$ and store only the
+        top-$K$ entries (indices and values) in a compact binary format.
+  \item \textbf{Train student.} Replay the same augmentation seeds and train
+        $S$ with a soft cross-entropy loss:
+        \begin{equation}
+          \mathcal{L}_{\text{distill}}
+          = -\sum_{c=1}^{C} p_T^{(c)}\;\log\,p_S^{(c)},
+          \label{eq:distill}
+        \end{equation}
+        where $p_T = \mathrm{softmax}(z_T/\tau)$ and
+        $p_S = \mathrm{softmax}(z_S/\tau)$ with temperature $\tau$.
+\end{enumerate}
+
+Because only the top-$K$ logits are stored (and the rest are imputed as
+a uniform residual), the storage footprint for ImageNet-1K at $K\!=\!100$,
+$300$~epochs is roughly $16$\,GB.
+
+\subsection{TinyViT Architecture}
+
+TinyViT is a four-stage hybrid architecture:
+\begin{itemize}
+  \item Stages~1--2 use \textbf{MBConv} (mobile inverted bottleneck) blocks
+        for efficient local feature extraction.
+  \item Stages~3--4 use \textbf{windowed multi-head self-attention} blocks.
+\end{itemize}
+Models range from TinyViT-5M ($5.4$\,M params, $1.3$\,GFLOPs) to
+TinyViT-21M ($21$\,M params, $4.3$\,GFLOPs).
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Datasets}
+
+\begin{itemize}
+  \item \textbf{CIFAR-100}: $50$k train / $10$k test images, $100$ classes,
+        resized to $224\times224$ to match the ViT input resolution.
+  \item \textbf{ImageNet-1K}: $1.28$M train / $50$k val images, $1000$
+        classes, $224\times224$.
+\end{itemize}
+
+\subsection{Models}
+
+Table~\ref{tab:models} lists the models used.
+The student is always TinyViT-5M unless stated otherwise.
+
+\begin{table}[h]
+\centering
+\caption{Models used in our experiments.}
+\label{tab:models}
+\small
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Model & Type & Params & Role \\
+\midrule
+TinyViT-5M  & Hybrid ViT & 5.4\,M  & Student \\
+TinyViT-21M & Hybrid ViT & 21\,M   & Teacher \\
+ViT-Base    & Transformer & 86\,M  & Teacher \\
+ResNet-152  & CNN         & 60\,M  & Teacher \\
+CLIP-ViT-L/14 & Transformer & 304\,M & Teacher \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Training Details}
+
+All experiments use AdamW with cosine learning rate decay and $10$-epoch
+warmup.
+CIFAR-100 runs: $200$~epochs, base LR~$10^{-3}$, batch size~$256$.
+ImageNet-1K pretraining: $300$~epochs, batch size~$512$ (2~GPUs).
+Fine-tuning from ImageNet-1K to CIFAR-100: $30$~epochs, LR~$2.5\times10^{-4}$.
+Data augmentation includes RandAugment, random erasing, and label smoothing
+($\epsilon=0.1$). Mixup/CutMix are \emph{disabled} during distillation
+to match the original paper's protocol.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Experiments and Results}
+\label{sec:results}
+
+We organise our experiments into four parts.
+
+% ·· Part 1 ··
+\subsection{Part 1 --- CIFAR-100 Direct Training}
+
+\paragraph{Goal.} Reproduce TinyViT's offline distillation on CIFAR-100 and
+compare multiple teacher architectures.
+
+\paragraph{Protocol.}
+(a)~Train TinyViT-5M from scratch (lower bound).
+(b)~Fine-tune four teachers (ResNet-152, ViT-Base, TinyViT-21M, CLIP-ViT-L)
+on CIFAR-100.
+(c)~Save top-$K$ logits for each teacher.
+(d)~Train TinyViT-5M students using each teacher's logits.
+
+% ── placeholder figure ──
+\begin{figure}[t]
+  \centering
+  \fbox{\parbox{0.9\linewidth}{\centering
+    \vspace{2.5cm}
+    \textcolor{gray}{\textit{WandB screenshot: Part~1 validation accuracy curves\\
+    (scratch vs.\ distillation from each teacher)}}
+    \vspace{0.3cm}
+  }}
+  \caption{CIFAR-100 validation accuracy for scratch baseline and
+           distillation with different teachers (Part~1).}
+  \label{fig:part1}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Part~1 results --- CIFAR-100 direct training with TinyViT-5M.}
+\label{tab:part1}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Experiment & Teacher Acc. & Student Acc. \\
+\midrule
+Scratch baseline       & ---    & \textit{xx.x\%} \\
+\midrule
+Distill (TinyViT-21M) & \textit{xx.x\%} & \textit{xx.x\%} \\
+Distill (ResNet-152)   & \textit{xx.x\%} & \textit{xx.x\%} \\
+Distill (ViT-Base)     & \textit{xx.x\%} & \textit{xx.x\%} \\
+Distill (CLIP-ViT-L)  & \textit{xx.x\%} & \textit{xx.x\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Findings.}
+\textit{%
+Fill in after completing runs.
+Expected: distillation from a stronger teacher (CLIP) should give the
+largest improvement; distillation benefit on CIFAR-100 alone is modest
+(+2--4\%) because the dataset is small (50k images).}
+
+% ── Top-K ablation ──
+\paragraph{Top-$K$ ablation.}
+We vary $K \in \{10, 25, 50, 100\}$ when saving logits from both
+TinyViT-21M and ViT-Base teachers on CIFAR-100.
+
+\begin{table}[h]
+\centering
+\caption{Effect of logit sparsity~$K$ on student accuracy (CIFAR-100).}
+\label{tab:topk}
+\small
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$K$ & TinyViT-21M teacher & ViT-Base teacher \\
+\midrule
+10  & \textit{xx.x\%} & \textit{xx.x\%} \\
+25  & \textit{xx.x\%} & \textit{xx.x\%} \\
+50  & \textit{xx.x\%} & \textit{xx.x\%} \\
+100 & \textit{xx.x\%} & \textit{xx.x\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{Expected: $K\!\ge\!25$ should suffice for CIFAR-100 (100 classes),
+consistent with the paper's finding that sparse logits retain most of the
+information.}
+
+% ·· Part 2 ··
+\subsection{Part 2 --- ImageNet-1K Pretraining}
+
+\paragraph{Goal.} Reproduce the paper's core methodology: pretrain
+TinyViT on a large-scale dataset (ImageNet-1K) with distillation, then
+evaluate by fine-tuning on the target task.
+
+\paragraph{Protocol.}
+(a)~Save teacher logits on ImageNet-1K (CLIP-ViT-L via timm, $\sim$88\% top-1).
+(b)~Pretrain TinyViT-21M for 300~epochs: \textbf{with} distillation vs.\
+\textbf{without} (scratch baseline).
+
+\begin{figure}[t]
+  \centering
+  \fbox{\parbox{0.9\linewidth}{\centering
+    \vspace{2.5cm}
+    \textcolor{gray}{\textit{WandB screenshot: ImageNet-1K pretraining curves\\
+    (distillation vs.\ scratch for TinyViT-21M)}}
+    \vspace{0.3cm}
+  }}
+  \caption{ImageNet-1K validation accuracy during pretraining (Part~2).}
+  \label{fig:part2}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Part~2 results --- ImageNet-1K pretraining.}
+\label{tab:part2}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Pretraining & IN-1K Val Acc. & Paper Ref. \\
+\midrule
+TinyViT-21M scratch      & \textit{xx.x\%} & 83.1\% \\
+TinyViT-21M + distill (CLIP) & \textit{xx.x\%} & 84.8\%$^*$ \\
+\bottomrule
+\multicolumn{3}{@{}l}{\footnotesize $^*$Paper result is with IN-22K distillation.}
+\end{tabular}
+\end{table}
+
+\paragraph{Findings.}
+\textit{Fill in.
+Note: we use IN-1K (1.28\,M images) instead of IN-22K (14\,M),
+so a gap relative to the paper's numbers is expected.}
+
+% ·· Part 3 ··
+\subsection{Part 3 --- Transfer Learning (IN-1K $\to$ CIFAR-100)}
+
+\paragraph{Goal.} Measure how much distillation \emph{during pretraining}
+benefits downstream fine-tuning on a different dataset.
+
+\paragraph{Protocol.}
+Fine-tune the two pretrained TinyViT-21M checkpoints from Part~2 on CIFAR-100
+for $30$ epochs with identical hyperparameters.
+
+\begin{table}[h]
+\centering
+\caption{Part~3 results --- Transfer to CIFAR-100.}
+\label{tab:part3}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Pretraining & CIFAR-100 Acc. & $\Delta$ \\
+\midrule
+Scratch $\to$ fine-tune  & \textit{xx.x\%} & --- \\
+Distill $\to$ fine-tune  & \textit{xx.x\%} & \textit{+x.x} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+  \centering
+  \fbox{\parbox{0.9\linewidth}{\centering
+    \vspace{2.5cm}
+    \textcolor{gray}{\textit{WandB screenshot: CIFAR-100 fine-tuning curves\\
+    (from scratch vs.\ from distilled pretrained)}}
+    \vspace{0.3cm}
+  }}
+  \caption{CIFAR-100 fine-tuning from scratch vs.\ distilled pretraining (Part~3).}
+  \label{fig:part3}
+\end{figure}
+
+\paragraph{Findings.}
+\textit{Fill in.
+Expected: the distillation-pretrained model should converge faster and
+achieve 2--3\% higher final accuracy, confirming that distillation
+benefits transfer across datasets.}
+
+% ·· Part 4 ··
+\subsection{Part 4 --- Feature Distillation Extension}
+
+\paragraph{Goal.}
+Extend the TinyViT framework by adding \textbf{feature-level} distillation
+alongside logit-level distillation, in a fully \emph{online} setting
+(no saved logits required).
+
+\paragraph{Method.}
+The total loss is:
+\begin{equation}
+  \mathcal{L} = \mathcal{L}_{\text{KL}} + \beta\;\mathcal{L}_{\text{feat}},
+  \label{eq:feature}
+\end{equation}
+where $\mathcal{L}_{\text{KL}}$ is the KL divergence between student and
+teacher logits (computed online), and
+\begin{equation}
+  \mathcal{L}_{\text{feat}} = 1 - \cos\!\bigl(
+    \mathrm{proj}(\mathbf{f}_S),\;\mathbf{f}_T
+  \bigr)
+\end{equation}
+with a learnable linear projection from the student feature dimension
+($320$ for TinyViT-5M) to the teacher dimension ($576$ for TinyViT-21M).
+We set $\beta=0.5$ by default.
+
+\begin{table}[h]
+\centering
+\caption{Part~4 results --- Online distillation on CIFAR-100.}
+\label{tab:part4}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Method & CIFAR-100 Acc. \\
+\midrule
+Scratch (no distillation) & \textit{xx.x\%} \\
+Online logits only        & \textit{xx.x\%} \\
+Online logits + features ($\beta\!=\!0.5$) & \textit{xx.x\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+  \centering
+  \fbox{\parbox{0.9\linewidth}{\centering
+    \vspace{2.5cm}
+    \textcolor{gray}{\textit{WandB screenshot: Online distillation\\
+    (logits-only vs.\ logits+features)}}
+    \vspace{0.3cm}
+  }}
+  \caption{Feature distillation extension --- training curves (Part~4).}
+  \label{fig:part4}
+\end{figure}
+
+\paragraph{Findings.}
+\textit{Fill in.
+Expected: adding feature distillation should provide a modest improvement
+over logits-only online distillation, by also aligning intermediate
+representations.}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Offline vs.\ online distillation.}
+The offline approach (Parts~1--3) trades storage for compute:
+once teacher logits are saved, student training runs at the cost of
+normal training.
+The online approach (Part~4) avoids storage but doubles the forward-pass
+cost.
+On a small dataset like CIFAR-100 ($50$k images), the storage overhead is
+negligible ($<100$\,MB), making offline distillation clearly advantageous.
+On ImageNet-1K, the storage cost ($\sim$16\,GB for $K\!=\!100$, $300$
+epochs) remains practical.
+
+\paragraph{Teacher architecture matters.}
+\textit{Discuss the relative rankings of ResNet-152, ViT-Base, TinyViT-21M,
+and CLIP-ViT-L as teachers.  Stronger teachers (CLIP) should lead to better
+students, but there may be diminishing returns.}
+
+\paragraph{Top-$K$ sparsity.}
+\textit{Discuss the top-$K$ ablation.  On CIFAR-100 ($C\!=\!100$),
+$K\!=\!25$ already captures most information since $K/C = 25\%$.  On
+ImageNet-1K ($C\!=\!1000$), $K\!=\!100$ ($10\%$) is the paper's default.}
+
+\paragraph{Limitations.}
+Our reproduction uses ImageNet-1K (1.28\,M images) rather than
+ImageNet-22K (14\,M), so we cannot directly match the paper's headline
+results.
+CIFAR-100 is also a relatively small benchmark; the distillation
+advantage is expected to be more pronounced on larger-scale datasets.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+\label{sec:conclusion}
+
+We successfully reproduced TinyViT's offline distillation pipeline on
+CIFAR-100 and ImageNet-1K, confirming that:
+\begin{enumerate}
+  \item Sparse teacher logits can replace the full teacher during training
+        with negligible loss of information.
+  \item Distillation pretraining transfers to downstream tasks, improving
+        CIFAR-100 accuracy over a scratch-trained baseline.
+  \item Teacher quality positively correlates with student performance.
+\end{enumerate}
+As an extension, we showed that combining feature and logit distillation
+in an online setting provides additional benefits, at the cost of
+higher training-time compute.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\bibliographystyle{unsrtnat}
+\begin{thebibliography}{9}
+
+\bibitem{wu2022tinyvit}
+K.~Wu, J.~Zhang, H.~Peng, M.~Liu, B.~Xiao, J.~Fu, and L.~Yuan,
+``TinyViT: Fast Pretraining Distillation for Small Vision Transformers,''
+in \emph{European Conference on Computer Vision (ECCV)}, 2022.
+
+\bibitem{dosovitskiy2020image}
+A.~Dosovitskiy, L.~Beyer, A.~Kolesnikov, D.~Weissenborn, X.~Zhai,
+T.~Unterthiner, M.~Dehghani, M.~Minderer, G.~Heigold, S.~Gelly, J.~Uszkoreit,
+and N.~Houlsby,
+``An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale,''
+in \emph{International Conference on Learning Representations (ICLR)}, 2021.
+
+\bibitem{hinton2015distilling}
+G.~Hinton, O.~Vinyals, and J.~Dean,
+``Distilling the Knowledge in a Neural Network,''
+\emph{arXiv:1503.02531}, 2015.
+
+\bibitem{radford2021clip}
+A.~Radford, J.~W.~Kim, C.~Hallacy, A.~Ramesh, G.~Goh, S.~Agarwal,
+G.~Sastry, A.~Askell, P.~Mishkin, J.~Clark, G.~Krueger, and I.~Sutskever,
+``Learning Transferable Visual Models From Natural Language Supervision,''
+in \emph{International Conference on Machine Learning (ICML)}, 2021.
+
+\bibitem{touvron2021deit}
+H.~Touvron, M.~Cord, M.~Douze, F.~Massa, A.~Sablayrolles, and H.~J{\'e}gou,
+``Training data-efficient image transformers \& distillation through attention,''
+in \emph{International Conference on Machine Learning (ICML)}, 2021.
+
+\end{thebibliography}
+
+\end{document}

@@ -80,6 +80,10 @@ class FeatureDistillationLoss(nn.Module):
         Returns:
             Scalar loss value (1 - mean cosine similarity)
         """
+        # Ensure float32 for projection (handles AMP FP16 inputs)
+        student_features = student_features.float()
+        teacher_features = teacher_features.float()
+
         # Project student features to teacher dimension
         student_proj = self.projection(student_features)
 
@@ -281,7 +285,7 @@ def build_teacher_for_feature_distill(config):
 
     # Load teacher checkpoint (required for online distillation)
     if config.DISTILL.TEACHER_CHECKPOINT:
-        checkpoint = torch.load(config.DISTILL.TEACHER_CHECKPOINT, map_location='cpu')
+        checkpoint = torch.load(config.DISTILL.TEACHER_CHECKPOINT, map_location='cpu', weights_only=False)
         if 'model' in checkpoint:
             state_dict = checkpoint['model']
         else:
