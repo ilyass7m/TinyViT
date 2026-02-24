@@ -109,6 +109,126 @@ def build_vit_base(num_classes: int = 100, pretrained: bool = True) -> nn.Module
 
 
 # =============================================================================
+# CLIP Model Builder (using OpenCLIP)
+# =============================================================================
+
+class CLIPVisionClassifier(nn.Module):
+    """
+    Wrapper that converts CLIP's visual encoder into a classifier.
+
+    CLIP-ViT-L/14 was used in the TinyViT paper as a large teacher model for
+    knowledge distillation. This wrapper:
+    1. Loads the CLIP visual encoder (discards text encoder)
+    2. Adds a classification head for the target number of classes
+    3. Provides a standard forward(x) -> logits interface
+
+    The visual encoder outputs 768-dim features for ViT-L/14.
+    """
+
+    def __init__(
+        self,
+        clip_model: nn.Module,
+        embed_dim: int,
+        num_classes: int,
+    ):
+        super().__init__()
+        self.visual = clip_model.visual
+        self.head = nn.Linear(embed_dim, num_classes)
+
+        # Store config for compatibility
+        self.num_classes = num_classes
+        self.embed_dim = embed_dim
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass: image -> logits."""
+        # CLIP visual encoder
+        features = self.visual(x)
+        # Classification head
+        logits = self.head(features)
+        return logits
+
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        """Return features before classification head."""
+        return self.visual(x)
+
+
+def build_clip_vit_l(
+    num_classes: int = 100,
+    pretrained: bool = True,
+    pretrained_dataset: str = "openai",
+) -> nn.Module:
+    """
+    Build CLIP-ViT-L/14 teacher model using OpenCLIP.
+
+    CLIP-ViT-L/14 is a 304M parameter vision transformer pretrained with
+    contrastive language-image learning. As described in the TinyViT paper,
+    CLIP was used as one of the large teacher models for knowledge distillation.
+
+    Available pretrained datasets:
+        - "openai": Original OpenAI CLIP (400M image-text pairs)
+        - "laion2b_s32b_b82k": LAION-2B (larger, potentially better)
+        - "datacomp_xl_s13b_b90k": DataComp XL
+
+    Args:
+        num_classes: Number of output classes
+        pretrained: Whether to load pretrained CLIP weights
+        pretrained_dataset: Which pretrained weights to use (default: "openai")
+
+    Returns:
+        CLIPVisionClassifier wrapping CLIP-ViT-L/14 with classification head
+
+    Note:
+        The model expects 224x224 RGB images normalized with CLIP's normalization:
+        mean=[0.48145466, 0.4578275, 0.40821073]
+        std=[0.26862954, 0.26130258, 0.27577711]
+    """
+    try:
+        import open_clip
+    except ImportError:
+        raise ImportError(
+            "open_clip_torch is required for CLIP models. "
+            "Install with: pip install open_clip_torch"
+        )
+
+    # Load CLIP model
+    clip_model, _, preprocess = open_clip.create_model_and_transforms(
+        'ViT-L-14',
+        pretrained=pretrained_dataset if pretrained else None,
+    )
+
+    # Get embedding dimension (768 for ViT-L/14)
+    embed_dim = clip_model.visual.output_dim
+
+    # Create classifier wrapper
+    model = CLIPVisionClassifier(
+        clip_model=clip_model,
+        embed_dim=embed_dim,
+        num_classes=num_classes,
+    )
+
+    print(f"Built CLIP-ViT-L/14 classifier:")
+    print(f"  Pretrained: {pretrained_dataset if pretrained else 'None'}")
+    print(f"  Visual encoder params: ~304M")
+    print(f"  Embedding dim: {embed_dim}")
+    print(f"  Num classes: {num_classes}")
+
+    return model
+
+
+def get_clip_transforms():
+    """
+    Get the preprocessing transforms used by CLIP.
+
+    Returns tuple of (mean, std) for normalization.
+    These should be used when training/evaluating CLIP models.
+    """
+    # CLIP normalization constants
+    CLIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
+    CLIP_STD = (0.26862954, 0.26130258, 0.27577711)
+    return CLIP_MEAN, CLIP_STD
+
+
+# =============================================================================
 # Unified Model Builder
 # =============================================================================
 
@@ -172,6 +292,8 @@ def build_teacher(
         model = build_vit_base(num_classes=num_classes, pretrained=use_pretrained)
     elif teacher_type == TeacherType.TINYVIT_21M:
         model = build_tinyvit_21m(num_classes=num_classes, pretrained=use_pretrained)
+    elif teacher_type == TeacherType.CLIP_VIT_L:
+        model = build_clip_vit_l(num_classes=num_classes, pretrained=use_pretrained)
     else:
         raise ValueError(f"Unknown teacher type: {teacher_type}")
 
@@ -231,7 +353,7 @@ def load_checkpoint(
     """
     print(f"Loading checkpoint: {checkpoint_path}")
 
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only = False)
 
     # Handle different checkpoint formats
     if 'model' in checkpoint:

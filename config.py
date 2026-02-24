@@ -82,6 +82,29 @@ _C.DISTILL.ENABLED = False
 _C.DISTILL.TEACHER_LOGITS_PATH = ''
 _C.DISTILL.SAVE_TEACHER_LOGITS = False
 _C.DISTILL.LOGITS_TOPK = 100
+_C.DISTILL.TEMPERATURE = 1.0  # Temperature for softmax in distillation
+_C.DISTILL.ALPHA = 0.5  # Weight for KL loss: L = (1-alpha)*CE + alpha*KL
+
+# Feature Distillation (extension)
+_C.DISTILL.FEATURE_ENABLED = False  # Enable feature distillation
+_C.DISTILL.FEATURE_WEIGHT = 0.5  # Beta weight for feature loss
+_C.DISTILL.FEATURE_DIM_TEACHER = 768  # CLIP-ViT-L/14 feature dimension
+_C.DISTILL.FEATURE_DIM_STUDENT = 320  # TinyViT-5M feature dimension
+_C.DISTILL.TEACHER_CHECKPOINT = ''  # Path to teacher checkpoint for online distillation
+
+# Online Distillation (teacher forward pass each batch)
+_C.DISTILL.ONLINE_DISTILL = False  # If True, use live teacher forward instead of saved logits
+_C.DISTILL.TEACHER_TYPE = 'tiny_vit'  # Teacher model type: 'tiny_vit', 'vit_base_patch16_224', etc.
+
+# Teacher TinyViT architecture (only used when TEACHER_TYPE='tiny_vit' and ONLINE_DISTILL=True)
+_C.DISTILL.TEACHER_TINY_VIT = CN()
+_C.DISTILL.TEACHER_TINY_VIT.EMBED_DIMS = [96, 192, 384, 576]  # TinyViT-21M default
+_C.DISTILL.TEACHER_TINY_VIT.DEPTHS = [2, 2, 6, 2]
+_C.DISTILL.TEACHER_TINY_VIT.NUM_HEADS = [3, 6, 12, 18]
+_C.DISTILL.TEACHER_TINY_VIT.WINDOW_SIZES = [7, 7, 14, 7]
+_C.DISTILL.TEACHER_TINY_VIT.MLP_RATIO = 4.
+_C.DISTILL.TEACHER_TINY_VIT.MBCONV_EXPAND_RATIO = 4.0
+_C.DISTILL.TEACHER_TINY_VIT.LOCAL_CONV_SIZE = 3
 
 # -----------------------------------------------------------------------------
 # Training settings
@@ -98,6 +121,8 @@ _C.TRAIN.MIN_LR = 5e-6
 _C.TRAIN.CLIP_GRAD = 5.0
 # Auto resume from latest checkpoint
 _C.TRAIN.AUTO_RESUME = True
+# Freeze early layers for faster finetuning (0=none, 1=stage1, 2=stage1+2, 3=stage1+2+3)
+_C.TRAIN.FREEZE_STAGES = 0
 # Gradient accumulation steps
 # could be overwritten by command line argument
 _C.TRAIN.ACCUMULATION_STEPS = 1
@@ -167,6 +192,8 @@ _C.TEST.CROP = True
 
 # Enable Pytorch automatic mixed precision (amp).
 _C.AMP_ENABLE = True
+# Enable torch.compile() for PyTorch 2.0+ (10-30% speedup, but slower first epoch)
+_C.COMPILE = False
 # Path to output folder, overwritten by command line argument
 _C.OUTPUT = ''
 # Tag of experiment, overwritten by command line argument

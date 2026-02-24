@@ -302,3 +302,173 @@ TinyViT/
 - Binary file: `[seed(4B) | indices(K×2B) | values(K×2B)]`
 - 10 epochs of logits saved (different augmentations)
 - Student training cycles through epochs with modulo
+
+---
+
+# Option 3: ImageNet-1k Distillation Pretraining (Recommended)
+
+This section describes the **correct methodology** to reproduce the TinyViT paper's approach:
+- **Pretraining with distillation** on a large dataset (ImageNet-1k, 1.2M images)
+- **Fine-tuning** on the target dataset (CIFAR-100) WITHOUT distillation
+
+This matches the paper's methodology where distillation happens during pretraining on ImageNet-22k,
+then models are fine-tuned on the target task.
+
+## Why This Approach?
+
+The original CIFAR-100 distillation experiments (above) train directly on CIFAR-100, which:
+- Only has 50k images (too small for meaningful distillation benefits)
+- Doesn't match the paper's methodology (distill on large data, evaluate on target data)
+
+Option 3 uses ImageNet-1k (1.2M images) for pretraining, providing:
+- 24x more training data than CIFAR-100
+- Proper separation between pretraining and evaluation datasets
+- Faithful reproduction of the paper's core idea
+
+## Pipeline Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PRETRAINING PHASE (ImageNet-1k, 1.2M images)                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Step 1: Save teacher logits (ResNet-152 or ViT-Base, pretrained)       │
+│  Step 2: Train TinyViT-5M with distillation                             │
+│  Step 2b: Train TinyViT-5M from scratch (baseline for comparison)       │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│  EVALUATION PHASE (CIFAR-100, 50k images)                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Step 3: Fine-tune distilled model on CIFAR-100                         │
+│  Step 3b: Fine-tune scratch model on CIFAR-100 (baseline)               │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Requirements
+
+- **ImageNet-1k dataset** (~150GB)
+  - Directory structure: `ImageNet/train/` and `ImageNet/val/`
+  - Or tar files: `ImageNet/train.tar` and `ImageNet/val.tar`
+- **4+ GPUs recommended** for reasonable training time
+- **~16GB storage** for teacher logits (10 epochs)
+
+## Step-by-Step Instructions
+
+### Step 1: Save Teacher Logits on ImageNet-1k
+
+Teachers (ResNet-152, ViT-Base) are **already pretrained on ImageNet-1k**, so no training needed!
+
+**Option A: ResNet-152 Teacher (Recommended)**
+```bash
+# Save ResNet-152 logits (10 epochs, ~530MB)
+torchrun --nproc_per_node=4 save_logits.py \
+    --cfg configs/1k_distill/resnet152_1k_save_logits.yaml \
+    --data-path /path/to/ImageNet \
+    --output ./output/1k_save_logits \
+    --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_resnet152/
+```
+
+**Option B: ViT-Base Teacher**
+```bash
+# Save ViT-Base logits
+torchrun --nproc_per_node=4 save_logits.py \
+    --cfg configs/1k_distill/vit_base_1k_save_logits.yaml \
+    --data-path /path/to/ImageNet \
+    --output ./output/1k_save_logits \
+    --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_vit_base/
+```
+
+**Time estimate**: ~2-4 hours per epoch on 4xA40
+
+### Step 2: Distillation Pretraining on ImageNet-1k
+
+```bash
+# Train TinyViT-5M with distillation (300 epochs)
+torchrun --nproc_per_node=4 main.py \
+    --cfg configs/1k_distill/tiny_vit_5m_1k_distill.yaml \
+    --data-path /path/to/ImageNet \
+    --output ./output/tiny_vit_5m_1k_distill \
+    --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_resnet152/
+```
+
+**Expected**: ~79-80% top-1 on ImageNet-1k validation
+**Time**: ~24-48 hours on 4xA40
+
+### Step 2b: Baseline - Scratch Training on ImageNet-1k
+
+```bash
+# Train TinyViT-5M from scratch (for comparison)
+torchrun --nproc_per_node=4 main.py \
+    --cfg configs/1k_distill/tiny_vit_5m_1k_scratch.yaml \
+    --data-path /path/to/ImageNet \
+    --output ./output/tiny_vit_5m_1k_scratch
+```
+
+**Expected**: ~79.1% top-1 on ImageNet-1k (from paper)
+
+### Step 3: Fine-tune on CIFAR-100
+
+```bash
+# Fine-tune distilled model on CIFAR-100
+torchrun --nproc_per_node=1 main.py \
+    --cfg configs/cifar100/tiny_vit_5m_cifar100_finetune_from_1k_distill.yaml \
+    --data-path ./data \
+    --output ./output/tiny_vit_5m_cifar100_from_1k_distill \
+    --pretrained ./output/tiny_vit_5m_1k_distill/ckpt_best.pth
+```
+
+**Expected**: 85-88% accuracy on CIFAR-100
+
+### Step 3b: Baseline - Fine-tune Scratch Model
+
+```bash
+# Fine-tune scratch-trained model on CIFAR-100 (for comparison)
+torchrun --nproc_per_node=1 main.py \
+    --cfg configs/cifar100/tiny_vit_5m_cifar100_finetune_from_1k_distill.yaml \
+    --data-path ./data \
+    --output ./output/tiny_vit_5m_cifar100_from_1k_scratch \
+    --pretrained ./output/tiny_vit_5m_1k_scratch/ckpt_best.pth
+```
+
+**Expected**: 83-86% accuracy on CIFAR-100
+
+## Expected Results Summary (Option 3)
+
+| Experiment | IN-1k Pretraining | CIFAR-100 Fine-tune | Expected CIFAR-100 Acc |
+|------------|-------------------|---------------------|------------------------|
+| Baseline 1 | None (scratch on CIFAR-100) | N/A | 75-82% |
+| Baseline 2 | Scratch (300 epochs) | Fine-tune (50 epochs) | 83-86% |
+| **Distillation** | **Distill from ResNet-152** | **Fine-tune (50 epochs)** | **85-88%** |
+| Distillation | Distill from ViT-Base | Fine-tune (50 epochs) | 85-88% |
+
+**Key comparison**: Distillation pretraining should give **2-3% improvement** over scratch pretraining
+when both are fine-tuned on CIFAR-100.
+
+## Config Files (Option 3)
+
+```
+configs/
+├── 1k_distill/
+│   ├── resnet152_1k_save_logits.yaml    # Save ResNet-152 logits
+│   ├── vit_base_1k_save_logits.yaml     # Save ViT-Base logits
+│   ├── tiny_vit_5m_1k_distill.yaml      # Distillation pretraining
+│   └── tiny_vit_5m_1k_scratch.yaml      # Scratch baseline
+└── cifar100/
+    └── tiny_vit_5m_cifar100_finetune_from_1k_distill.yaml  # CIFAR-100 fine-tuning
+```
+
+## Reduced Training Schedule (For Faster Experiments)
+
+If compute is limited, you can reduce training epochs:
+
+```bash
+# Faster distillation pretraining (100 epochs instead of 300)
+torchrun --nproc_per_node=4 main.py \
+    --cfg configs/1k_distill/tiny_vit_5m_1k_distill.yaml \
+    --data-path /path/to/ImageNet \
+    --output ./output/tiny_vit_5m_1k_distill_fast \
+    --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_resnet152/ \
+           TRAIN.EPOCHS 100 TRAIN.WARMUP_EPOCHS 10
+```
+
+Expected accuracy will be ~1-2% lower but still demonstrates the distillation benefit.

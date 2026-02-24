@@ -1,0 +1,77 @@
+# =============================================================================
+# CLIP-ViT-L/14 Save Logits on ImageNet-1K
+# =============================================================================
+# Step 1: Generate and save soft labels from CLIP teacher
+#
+# IMPORTANT: The original TinyViT paper does NOT finetune CLIP!
+# Option A (Recommended): Use pretrained CLIP directly (faster, simpler)
+# Option B: Use finetuned CLIP (if you ran clip_vit_l_1k_finetune.yaml)
+#
+# Key settings (following official TinyViT paper):
+# - Uses CLIP normalization (mean/std) for input preprocessing
+# - Saves top-10 logits per image (official paper uses K=10 for IN-1K)
+# - Runs 10 epochs with augmentation for diverse soft labels
+# - These logits are cycled during 300-epoch student training (epoch % 10)
+#
+# Usage (Option A - pretrained CLIP, no finetuning needed):
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 save_logits.py \
+#     --cfg configs/1k_distill/clip_vit_l_1k_save_logits.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/logits/clip_vit_l_1k
+#   (No --resume needed, will use pretrained CLIP weights)
+#
+# Usage (Option B - finetuned CLIP):
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 save_logits.py \
+#     --cfg configs/1k_distill/clip_vit_l_1k_save_logits.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/logits/clip_vit_l_1k \
+#     --resume ./output/clip_vit_l_1k_finetune/CLIP-ViT-L-Finetune-1K/default/ckpt_epoch_19.pth
+#
+# Output: ./output/logits/clip_vit_l_1k/ containing epoch_0/ to epoch_9/
+# Storage: ~16GB for 10 epochs of top-10 logits (official paper: 16GB for IN-1K)
+
+MODEL:
+  NAME: CLIP-ViT-L-SaveLogits-1K
+  TYPE: clip_vit_large_patch14
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  PRETRAINED_TIMM: True  # Load pretrained OpenAI CLIP weights
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  MEAN_AND_STD_TYPE: clip  # CLIP normalization
+
+TRAIN:
+  # 10 epochs of augmented images for diverse soft labels
+  EPOCHS: 10
+  WARMUP_EPOCHS: 0
+  BASE_LR: 0.0  # No training, just forward pass
+  WEIGHT_DECAY: 0.0
+
+DISTILL:
+  ENABLED: False
+  SAVE_TEACHER_LOGITS: True
+  LOGITS_TOPK: 10  # Official TinyViT paper uses K=10 for IN-1K (saves storage)
+
+AUG:
+  # Augmentation for diverse soft labels (same as student training)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 500
+SAVE_FREQ: 1  # Save after each epoch

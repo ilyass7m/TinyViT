@@ -1,0 +1,80 @@
+# =============================================================================
+# EXPERIMENT D: TinyViT-5M Distillation from ViT-Base on ImageNet-1K
+# =============================================================================
+# Purpose: Compare teacher quality - ResNet-152 vs ViT-Base vs CLIP
+#
+# Pipeline:
+#   1. Save ViT-Base logits (no finetuning needed - pretrained on IN-1K)
+#   2. Pretrain TinyViT-5M with distillation (this config) - 300 epochs
+#   3. Finetune on CIFAR-100 - 30 epochs
+#   4. Compare with ResNet-152 teacher (Experiment C)
+#
+# Teacher: ViT-Base-patch16-224 (timm pretrained, ~81.8% top-1)
+# Student: TinyViT-5M (~5.4M parameters)
+#
+# TinyViT-5M Architecture:
+#   Depths=[2,2,6,2], Heads=[2,4,5,10], Dims=[64,128,160,320]
+#
+# Usage (1 GPU, can run alongside other experiments):
+#   CUDA_VISIBLE_DEVICES=1 torchrun --nproc_per_node=1 --master_port=29602 main.py \
+#     --cfg configs/1k_distill/tiny_vit_5m_1k_distill_vit_base.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/tiny_vit_5m_1k_distill_vit_base \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/vit_base_1k/
+
+MODEL:
+  NAME: TinyViT-5M-1k-Distill-ViTBase
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0  # TinyViT-5M uses 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 360  # TinyViT-5M is smaller, can use larger batch
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  # Use default ImageNet normalization (same as ViT teacher)
+  MEAN_AND_STD_TYPE: default
+
+TRAIN:
+  EPOCHS: 200
+  WARMUP_EPOCHS: 20
+  BASE_LR: 5e-4
+  WARMUP_LR: 5e-7
+  MIN_LR: 5e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0
+  AUTO_RESUME: True
+
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  LOGITS_TOPK: 100  # ViT-Base saves top-100
+  TEMPERATURE: 1.0
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 0
+PRINT_FREQ: 100
+SAVE_FREQ: 10

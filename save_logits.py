@@ -68,10 +68,17 @@ def main(config):
     optimizer = None
     lr_scheduler = None
 
-    assert config.MODEL.RESUME
     loss_scaler = NativeScalerWithGradNormCount()
-    load_checkpoint(config, model_without_ddp, optimizer,
-                    lr_scheduler, loss_scaler, logger)
+
+    # Load checkpoint if provided (for finetuned models)
+    if config.MODEL.RESUME:
+        load_checkpoint(config, model_without_ddp, optimizer,
+                        lr_scheduler, loss_scaler, logger)
+        logger.info(f"Loaded checkpoint from {config.MODEL.RESUME}")
+    else:
+        logger.info("No checkpoint provided - using model with pretrained weights only")
+        logger.info("WARNING: If using CLIP, the classification head is randomly initialized!")
+        logger.info("         Validation accuracy will be low without finetuning.")
 
     # Reset START_EPOCH for saving logits (load_checkpoint may have modified it)
     # We always want to save logits starting from epoch 0

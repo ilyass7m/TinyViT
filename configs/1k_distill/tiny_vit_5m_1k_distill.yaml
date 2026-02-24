@@ -1,0 +1,74 @@
+# TinyViT-5M Distillation Pretraining on ImageNet-1k
+# Step 2: Train TinyViT-5M using saved teacher logits
+#
+# This is the core of Option 3: Distillation pretraining on IN-1k
+# After this, fine-tune on CIFAR-100 for final evaluation.
+#
+# Usage:
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_5m_1k_distill.yaml \
+#     --data-path /path/to/ImageNet \
+#     --output ./output/tiny_vit_5m_1k_distill \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_resnet152/
+#
+# Expected: ~79-80% top-1 accuracy on IN-1k validation
+# Time: ~24-48 hours on 4xA40 (300 epochs)
+
+MODEL:
+  NAME: TinyViT-5M-1k-Distill
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0  # No label smoothing with soft targets
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Standard IN-1k training schedule
+  # Paper uses 300 epochs; can reduce to 100-150 for faster experiments
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  BASE_LR: 2e-3
+  WARMUP_LR: 2e-6
+  MIN_LR: 2e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+# DISTILLATION CONFIG
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  # Must match the topk used when saving logits!
+  LOGITS_TOPK: 100
+
+AUG:
+  # Must match augmentation used when saving teacher logits!
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable Mixup/CutMix for distillation (seed replay limitation)
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 100
+SAVE_FREQ: 20

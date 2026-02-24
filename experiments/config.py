@@ -24,6 +24,7 @@ class TeacherType(Enum):
     RESNET50 = "resnet50"
     VIT_BASE = "vit_base_patch16_224"
     TINYVIT_21M = "tiny_vit_21m"
+    CLIP_VIT_L = "clip_vit_large_patch14"  # CLIP-ViT-L/14 as used in TinyViT paper
 
 
 class StudentType(Enum):
@@ -254,6 +255,30 @@ def _create_teacher_tinyvit21m() -> ExperimentConfig:
     return config
 
 
+def _create_teacher_clip_vit_l() -> ExperimentConfig:
+    """T4: Finetune CLIP-ViT-L/14 teacher on CIFAR-100.
+
+    CLIP-ViT-L/14 is a large vision transformer (304M params) pretrained with
+    contrastive language-image learning. As used in the TinyViT paper, CLIP and
+    Florence were finetuned on ImageNet-21k before being used as teachers.
+    """
+    config = ExperimentConfig(
+        exp_id="T4",
+        exp_name="teacher_clip_vit_l",
+        description="Finetune CLIP-ViT-L/14 teacher (304M params, as in TinyViT paper)",
+        model_type="teacher",
+        teacher_type=TeacherType.CLIP_VIT_L,
+        pretrained="imagenet",  # Will load CLIP pretrained weights
+    )
+    # CLIP is large, need careful tuning
+    config.training.epochs = 50  # Fewer epochs since CLIP is very well pretrained
+    config.training.base_lr = 5e-5  # Lower LR for large pretrained model
+    config.training.warmup_epochs = 3
+    config.training.weight_decay = 0.01  # Lighter weight decay
+    config.data.batch_size = 16  # Small batch due to model size (304M params)
+    return config
+
+
 def _create_distill_same_family(logits_path: str) -> ExperimentConfig:
     """D1: Distill from TinyViT-21M to TinyViT-5M (core paper reproduction)."""
     config = ExperimentConfig(
@@ -302,6 +327,33 @@ def _create_distill_vit_teacher(logits_path: str) -> ExperimentConfig:
     config.distillation.logits_path = logits_path
     config.distillation.topk = 100
     config.distillation.alpha = 0.5
+    return config
+
+
+def _create_distill_clip_teacher(logits_path: str) -> ExperimentConfig:
+    """D4: Distill from CLIP-ViT-L/14 to TinyViT-5M.
+
+    This reproduces the TinyViT paper's approach of using a large CLIP model
+    as the teacher for knowledge distillation. CLIP-ViT-L/14 has 304M parameters
+    and provides rich visual representations learned from 400M image-text pairs.
+    """
+    config = ExperimentConfig(
+        exp_id="D4",
+        exp_name="distill_clip_teacher",
+        description="CLIP-ViT-L/14 -> TinyViT-5M distillation (paper reproduction)",
+        student_type=StudentType.TINYVIT_5M,
+        pretrained=None,  # Train student from scratch with distillation
+    )
+    config.distillation.enabled = True
+    config.distillation.teacher_type = TeacherType.CLIP_VIT_L
+    config.distillation.logits_path = logits_path
+    config.distillation.topk = 100
+    config.distillation.alpha = 0.5
+    config.distillation.temperature = 1.0
+    # Training settings optimized for CLIP distillation
+    config.training.epochs = 200
+    config.training.base_lr = 2e-3
+    config.training.warmup_epochs = 10
     return config
 
 
@@ -356,6 +408,7 @@ EXPERIMENTS = {
     "T1": _create_teacher_resnet50,
     "T2": _create_teacher_vit_base,
     "T3": _create_teacher_tinyvit21m,
+    "T4": _create_teacher_clip_vit_l,  # CLIP-ViT-L/14 (TinyViT paper)
 }
 
 # These need logits_path argument
@@ -363,6 +416,7 @@ DISTILLATION_EXPERIMENTS = {
     "D1": _create_distill_same_family,
     "D2": _create_distill_cnn_teacher,
     "D3": _create_distill_vit_teacher,
+    "D4": _create_distill_clip_teacher,  # CLIP teacher (TinyViT paper)
     "A4": _create_ablation_transfer_distill,
 }
 
@@ -372,8 +426,8 @@ def get_experiment_config(exp_id: str, logits_path: Optional[str] = None, topk: 
     Get experiment configuration by ID.
 
     Args:
-        exp_id: Experiment identifier (B1, B2, T1-T3, D1-D3, A1-A4)
-        logits_path: Path to saved teacher logits (required for D1-D3, A1-A4)
+        exp_id: Experiment identifier (B1, B2, T1-T4, D1-D4, A1-A4)
+        logits_path: Path to saved teacher logits (required for D1-D4, A1-A4)
         topk: Top-K value for ablation experiments A1-A3
 
     Returns:
@@ -413,11 +467,13 @@ def list_experiments() -> Dict[str, str]:
     experiments["T1"] = "Teacher: Finetune ResNet-50 on CIFAR-100"
     experiments["T2"] = "Teacher: Finetune ViT-Base on CIFAR-100"
     experiments["T3"] = "Teacher: Finetune TinyViT-21M on CIFAR-100"
+    experiments["T4"] = "Teacher: Finetune CLIP-ViT-L/14 on CIFAR-100 (TinyViT paper)"
 
     # Distillation
     experiments["D1"] = "Distill: TinyViT-21M -> TinyViT-5M (same-family)"
     experiments["D2"] = "Distill: ResNet-50 -> TinyViT-5M (CNN teacher)"
     experiments["D3"] = "Distill: ViT-Base -> TinyViT-5M (ViT teacher)"
+    experiments["D4"] = "Distill: CLIP-ViT-L/14 -> TinyViT-5M (TinyViT paper)"
 
     # Ablations
     experiments["A1"] = "Ablation: Top-K=10 logit sparsity"

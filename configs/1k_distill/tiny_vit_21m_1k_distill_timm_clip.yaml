@@ -1,0 +1,85 @@
+# =============================================================================
+# EXPERIMENT A: TinyViT-21M Distillation with TIMM CLIP Teacher
+# =============================================================================
+# Purpose: Pretrain TinyViT-21M using soft labels from pretrained TIMM CLIP
+# Teacher: vit_large_patch14_clip_336.laion2b_ft_in12k_in1k (~88% IN-1K)
+#
+# Pipeline:
+#   1. Save teacher logits (timm_clip_vit_l_336_1k_save_logits.yaml)
+#   2. Distill to TinyViT-21M (this config)
+#   3. Finetune on CIFAR-100 (tiny_vit_21m_cifar100_finetune_from_distill.yaml)
+#   4. Compare with scratch baseline
+#
+# Usage (2x A40 GPUs):
+#   NCCL_P2P_DISABLE=1 torchrun --nproc_per_node=2 --master_port=29500 main.py \
+#     --cfg configs/1k_distill/tiny_vit_21m_1k_distill_timm_clip.yaml \
+#     --data-path /data/ImageNet \
+#     --output ./output/tiny_vit_21m_1k_distill_timm_clip \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/timm_clip_vit_l_336_1k
+#
+# Effective batch size: 256 × 2 GPUs = 512
+
+MODEL:
+  NAME: TinyViT-21M-1k-Distill-TIMM-CLIP
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.1  # Official: 0.1 for distillation
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0  # No label smoothing with soft targets
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 18 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 96, 192, 384, 576 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224  # Student uses 224 (standard)
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256  # Per GPU
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  # Use default ImageNet normalization (to match teacher)
+  MEAN_AND_STD_TYPE: default
+
+TRAIN:
+  # Match epochs with scratch baseline for fair comparison
+  EPOCHS: 100  # Can increase to 300 for full training
+  WARMUP_EPOCHS: 10
+  BASE_LR: 5e-4
+  WARMUP_LR: 5e-7
+  MIN_LR: 5e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0
+  AUTO_RESUME: True
+  ACCUMULATION_STEPS: 1
+
+# Distillation Configuration
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  LOGITS_TOPK: 10
+  TEMPERATURE: 1.0
+
+AUG:
+  # Standard augmentation (must match logits saving!)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0  # Disabled for distillation
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 0
+PRINT_FREQ: 100
+SAVE_FREQ: 10
+
+# Performance
+COMPILE: True
+AMP_ENABLE: True

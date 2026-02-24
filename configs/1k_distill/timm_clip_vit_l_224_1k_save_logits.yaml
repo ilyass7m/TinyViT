@@ -1,0 +1,50 @@
+# =============================================================================
+# TIMM CLIP-ViT-L/14 Save Logits at 224x224 (FAST VERSION)
+# =============================================================================
+# Uses 224x224 instead of 336x336 - 2.25x faster, slightly lower accuracy
+# Model: vit_large_patch14_clip_224.laion2b_ft_in12k_in1k
+# Expected accuracy: ~86% (vs 87.4% at 336)
+
+MODEL:
+  NAME: TIMM-CLIP-ViT-L-224-SaveLogits-1K
+  TYPE: vit_large_patch14_clip_224.laion2b_ft_in12k_in1k
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224    # Smaller = faster
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256  # Can use larger batch at 224
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  MEAN_AND_STD_TYPE: default
+
+TRAIN:
+  EPOCHS: 10
+  WARMUP_EPOCHS: 0
+  BASE_LR: 0.0
+  WEIGHT_DECAY: 0.0
+
+DISTILL:
+  ENABLED: False
+  SAVE_TEACHER_LOGITS: True
+  LOGITS_TOPK: 10
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 500
+SAVE_FREQ: 1

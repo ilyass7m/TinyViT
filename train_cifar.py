@@ -171,7 +171,7 @@ def load_pretrained_weights(model, pretrained_path, num_classes, device):
     else:
         # Load from local checkpoint
         print(f"Loading pretrained weights from: {pretrained_path}")
-        checkpoint = torch.load(pretrained_path, map_location=device)
+        checkpoint = torch.load(pretrained_path, map_location=device, weights_only = False)
         if 'model' in checkpoint:
             pretrained_state = checkpoint['model']
         else:
@@ -718,7 +718,7 @@ def main():
             }, os.path.join(args.output, 'best.pth'))
 
         # Save periodic checkpoint
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 10 == 0:
             save_checkpoint({
                 'epoch': epoch,
                 'model': model.state_dict(),

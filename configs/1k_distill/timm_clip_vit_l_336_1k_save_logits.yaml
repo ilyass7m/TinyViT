@@ -1,0 +1,72 @@
+# =============================================================================
+# TIMM CLIP-ViT-L/14-336 Save Logits on ImageNet-1K
+# =============================================================================
+# Using pretrained CLIP from HuggingFace/timm that's already finetuned on IN-1K
+# Model: vit_large_patch14_clip_336.laion2b_ft_in12k_in1k
+#
+# This model is:
+#   - Pretrained on LAION-2B (2 billion image-text pairs)
+#   - Finetuned on ImageNet-12K
+#   - Finetuned on ImageNet-1K (final)
+#   - Expected accuracy: ~88% top-1 on IN-1K
+#
+# Advantages over raw CLIP:
+#   - Already has a trained classification head (not random!)
+#   - Higher resolution (336 vs 224) = better features
+#   - No finetuning needed
+#
+# Usage:
+#   NCCL_P2P_DISABLE=1 torchrun --nproc_per_node=2 --master_port=29500 save_logits.py \
+#     --cfg configs/1k_distill/timm_clip_vit_l_336_1k_save_logits.yaml \
+#     --data-path /data/ImageNet \
+#     --output ./output/logits/timm_clip_vit_l_336_1k
+#
+# Output: ~16GB for 10 epochs of top-10 logits
+# Time: ~30-45 minutes on 2x A40 (full speed)
+
+MODEL:
+  NAME: TIMM-CLIP-ViT-L-336-SaveLogits-1K
+  TYPE: vit_large_patch14_clip_336.laion2b_ft_in12k_in1k
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  PRETRAINED_TIMM: True  # Load pretrained weights from timm
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 336  # Native resolution for this model
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128  # Optimal for A40 48GB at 336x336 (uses ~30-35GB)
+  NUM_WORKERS: 8  # Optimal for 2 GPUs with full system resources
+  PIN_MEMORY: True
+  # Use default ImageNet normalization (model was finetuned with it)
+  MEAN_AND_STD_TYPE: default
+
+TRAIN:
+  # 10 epochs of augmented images for diverse soft labels
+  EPOCHS: 10
+  WARMUP_EPOCHS: 0
+  BASE_LR: 0.0  # No training, just forward pass
+  WEIGHT_DECAY: 0.0
+
+DISTILL:
+  ENABLED: False
+  SAVE_TEACHER_LOGITS: True
+  LOGITS_TOPK: 10  # Top-10 logits per image
+
+AUG:
+  # Augmentation for diverse soft labels
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 500
+SAVE_FREQ: 1

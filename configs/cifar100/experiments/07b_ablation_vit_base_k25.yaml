@@ -1,50 +1,54 @@
 # =============================================================================
-# EXPERIMENT 3c: Teacher - TinyViT-21M (~21M params)
+# EXPERIMENT 9e: TopK Ablation - ViT-Base Teacher, K=25
 # =============================================================================
-# Purpose: Train same-family teacher (core TinyViT paper claim)
-# Expected accuracy: ~88-91%
+# Purpose: Measure distillation quality with top-25 logits from ViT-Base
+#
+# Prerequisites: Save logits first using exp9_save_logits_vit_base_k25.yaml
 #
 # Usage:
-#   # First download pretrained weights:
-#   wget -P pretrained/ https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22k_distill.pth
-#
 #   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 main.py \
-#     --cfg configs/cifar100/experiments/exp3_teacher_tinyvit21m.yaml \
+#     --cfg configs/cifar100/experiments/exp9_ablation_vit_base_k25.yaml \
 #     --data-path ./data \
-#     --output ./output/exp3_teacher_tinyvit21m \
-#     --pretrained pretrained/tiny_vit_21m_22k_distill.pth
+#     --output ./output/exp9_ablation_vit_base_k25 \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/vit_base_k25/
 
 MODEL:
-  NAME: Exp3-TinyViT21M-Teacher
+  NAME: Exp9-Ablation-ViTBase-K25
   TYPE: tiny_vit
   NUM_CLASSES: 100
   DROP_PATH_RATE: 0.0
   DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0
 
   TINY_VIT:
     DEPTHS: [ 2, 2, 6, 2 ]
-    NUM_HEADS: [ 3, 6, 12, 18 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
     WINDOW_SIZES: [ 7, 7, 14, 7 ]
-    EMBED_DIMS: [ 96, 192, 384, 576 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
 
 DATA:
   DATASET: cifar100
   IMG_SIZE: 224
   INTERPOLATION: bicubic
-  BATCH_SIZE: 64
-  NUM_WORKERS: 6
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
   PIN_MEMORY: True
 
 TRAIN:
-  EPOCHS: 50
-  WARMUP_EPOCHS: 5
-  BASE_LR: 2e-4
-  WARMUP_LR: 1e-7
-  MIN_LR: 1e-6
+  EPOCHS: 200
+  WARMUP_EPOCHS: 10
+  BASE_LR: 2e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
   WEIGHT_DECAY: 0.05
   CLIP_GRAD: 5.0
-  LAYER_LR_DECAY: 0.75
+  LAYER_LR_DECAY: 0.9
   AUTO_RESUME: True
+
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''
+  LOGITS_TOPK: 25
 
 AUG:
   COLOR_JITTER: 0.4
@@ -60,4 +64,4 @@ TEST:
 
 SEED: 42
 PRINT_FREQ: 50
-SAVE_FREQ: 5
+SAVE_FREQ: 20

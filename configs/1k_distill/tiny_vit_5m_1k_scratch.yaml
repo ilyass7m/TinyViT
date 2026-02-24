@@ -1,0 +1,68 @@
+# TinyViT-5M Training from Scratch on ImageNet-1k (Baseline)
+# This serves as the baseline to compare against distillation pretraining
+#
+# Usage:
+#   torchrun --nproc_per_node=4 main.py \
+#     --cfg configs/1k_distill/tiny_vit_5m_1k_scratch.yaml \
+#     --data-path /path/to/ImageNet \
+#     --output ./output/tiny_vit_5m_1k_scratch
+#
+# Expected: ~79.1% top-1 accuracy on IN-1k (from paper)
+# Time: ~24-48 hours on 4xA40 (300 epochs)
+
+MODEL:
+  NAME: TinyViT-5M-1k-Scratch
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Standard IN-1k training schedule (same as distillation for fair comparison)
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  BASE_LR: 2e-3
+  WARMUP_LR: 2e-6
+  MIN_LR: 2e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+# No distillation
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Standard augmentation with Mixup/CutMix (enabled for scratch training)
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 100
+SAVE_FREQ: 10

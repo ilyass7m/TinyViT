@@ -55,10 +55,14 @@ class LRSchedulerWrapper:
             lr_scale = None
             for p in params:
                 if hasattr(p, 'lr_scale'):
+                    p_lr_scale = p.lr_scale if p.lr_scale is not None else 1.0
                     if lr_scale is None:
-                        lr_scale = p.lr_scale
+                        lr_scale = p_lr_scale
                     else:
-                        assert lr_scale == p.lr_scale, (lr_scale, p.lr_scale)
+                        assert lr_scale == p_lr_scale, (lr_scale, p_lr_scale)
+            # Default to 1.0 if no lr_scale found (e.g., CLIP models)
+            if lr_scale is None:
+                lr_scale = 1.0
             if lr_scale != group['lr_scale']:
                 if is_main_process():
                     print('=' * 30)
@@ -114,6 +118,9 @@ def divide_param_groups_by_lr_scale(param_groups):
         lr_scale_groups = dict()
         for p in params:
             lr_scale = getattr(p, 'lr_scale', 1.0)
+            # Handle case where lr_scale is explicitly None (e.g., CLIP models)
+            if lr_scale is None:
+                lr_scale = 1.0
 
             # create a list if not existed
             if lr_scale not in lr_scale_groups:

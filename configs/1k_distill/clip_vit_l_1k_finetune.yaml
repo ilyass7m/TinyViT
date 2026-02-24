@@ -1,0 +1,74 @@
+# =============================================================================
+# CLIP-ViT-L/14 Finetuning on ImageNet-1K
+# =============================================================================
+# Step 0: Finetune CLIP's classification head on ImageNet-1K
+#
+# CLIP was trained for image-text contrastive learning, not classification.
+# We add a classification head and finetune it on ImageNet-1K to get a
+# strong teacher model (~85% top-1 accuracy).
+#
+# Only the classification head is trained (visual encoder is frozen).
+# This is fast and prevents overfitting.
+#
+# Usage:
+#   CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 --master_port=29500 main.py \
+#     --cfg configs/1k_distill/clip_vit_l_1k_finetune.yaml \
+#     --data-path ./data/ImageNet \
+#     --output ./output/clip_vit_l_1k_finetune
+#
+# Expected: ~85% top-1 accuracy on ImageNet-1K validation
+# Time: ~4-8 hours on single GPU (20 epochs)
+
+MODEL:
+  NAME: CLIP-ViT-L-Finetune-1K
+  TYPE: clip_vit_large_patch14
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  PRETRAINED_TIMM: True  # Load pretrained OpenAI CLIP weights
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 1024
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+  MEAN_AND_STD_TYPE: clip  # CLIP normalization
+
+TRAIN:
+  # Short finetuning schedule - only training the head
+  EPOCHS: 20
+  WARMUP_EPOCHS: 2
+  BASE_LR: 1e-3  # Higher LR for head-only training
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.01
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 1.0  # No layer-wise decay (only head is trained)
+  AUTO_RESUME: True
+  # Freeze visual encoder, only train head
+  EVAL_BN_WHEN_TRAINING: True
+
+DISTILL:
+  ENABLED: False
+
+AUG:
+  # Standard augmentation
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.8
+  CUTMIX: 1.0
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  MIXUP_MODE: batch
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 500
+SAVE_FREQ: 5

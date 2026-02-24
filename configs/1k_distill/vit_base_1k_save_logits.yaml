@@ -1,0 +1,61 @@
+# ViT-Base Config for SAVING Teacher Logits on ImageNet-1k
+# Step 1 (Alternative): Save pretrained ViT-Base logits for distillation pretraining
+#
+# NOTE: ViT-Base (vit_base_patch16_224) is pretrained on ImageNet-1k via timm
+#       We directly use pretrained weights to extract logits.
+#
+# Usage:
+#   torchrun --nproc_per_node=4 save_logits.py \
+#     --cfg configs/1k_distill/vit_base_1k_save_logits.yaml \
+#     --data-path /path/to/ImageNet \
+#     --output ./output/1k_save_logits \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./teacher_logits_1k_vit_base/
+#
+# Storage: ~16GB for 300 epochs (10 epochs = ~530MB)
+# Time: ~3-4 hours per epoch on 4xA40
+
+MODEL:
+  NAME: ViT-Base-IN1k-Teacher
+  TYPE: vit_base_patch16_224
+  NUM_CLASSES: 1000
+  DROP_RATE: 0.0
+  DROP_PATH_RATE: 0.0
+  # Load ImageNet pretrained weights from timm
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  # Number of epochs of logits to save
+  EPOCHS: 10
+  START_EPOCH: 0
+
+# DISTILLATION CONFIG
+DISTILL:
+  ENABLED: True
+  SAVE_TEACHER_LOGITS: True
+  TEACHER_LOGITS_PATH: ''  # Set via --opts
+  # Save top-100 logits for ImageNet-1k (1000 classes)
+  LOGITS_TOPK: 100
+
+AUG:
+  # Standard augmentation - must match student training!
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  # Disable mixup for cleaner logits
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 100
