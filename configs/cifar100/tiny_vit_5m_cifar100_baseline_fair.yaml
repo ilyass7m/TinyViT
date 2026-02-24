@@ -1,0 +1,51 @@
+# TinyViT-5M Baseline for CIFAR-100 (Fair comparison with distillation)
+# Same augmentation as distillation config - NO Mixup/CutMix
+
+MODEL:
+  NAME: TinyViT-5M-CIFAR100-Baseline
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+
+  TINY_VIT:
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 2, 4, 5, 10 ]
+    WINDOW_SIZES: [ 7, 7, 14, 7 ]
+    EMBED_DIMS: [ 64, 128, 160, 320 ]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 100  # Same as distillation
+  WARMUP_EPOCHS: 5
+  BASE_LR: 2e-3  # Same as distillation
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  LAYER_LR_DECAY: 0.9
+  AUTO_RESUME: True
+
+AUG:
+  # Same augmentation as distillation - NO Mixup/CutMix for fair comparison
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0  # Disabled for fair comparison
+  CUTMIX: 0.0  # Disabled for fair comparison
+
+TEST:
+  CROP: True
+
+PRINT_FREQ: 20
+SAVE_FREQ: 10

@@ -65,7 +65,8 @@ class DatasetWrapper(torch.utils.data.Dataset):
         manager = self.get_manager()
         bstr: bytes = manager.read(key)
         # parse the augmentation seed
-        seed = int(np.frombuffer(bstr[:4], dtype=np.int32))
+        seed_array = np.frombuffer(bstr[:4], dtype=np.int32)
+        seed = int(seed_array.item())  
         # parse the logits index and value
         # copy logits_index and logits_value to avoid warning of written flag from PyTorch
         bstr = bstr[4:]
@@ -111,3 +112,20 @@ class DatasetWrapper(torch.utils.data.Dataset):
                 assert len(keys) == len(set(keys)), 'keys must be unique'
             return keys
         return [str(i) for i in range(len(self))]
+
+    def _count_saved_epochs(self):
+        """Count how many epochs of logits are saved for cycling through them."""
+        if not os.path.isdir(self.logits_path):
+            return 10  # Default, will fail later with clear error if path doesn't exist
+        prefix = f'logits_top{self.topk}_epoch'
+        epochs = []
+        for name in os.listdir(self.logits_path):
+            if name.startswith(prefix):
+                try:
+                    epoch_num = int(name[len(prefix):])
+                    epochs.append(epoch_num)
+                except ValueError:
+                    continue
+        if not epochs:
+            return 10  # Default
+        return max(epochs) + 1  # e.g., if epochs 0-9 exist, return 10

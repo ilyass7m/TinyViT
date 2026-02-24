@@ -1,0 +1,101 @@
+AMP_ENABLE: true
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  COLOR_JITTER: 0.4
+  CUTMIX: 0.0
+  CUTMIX_MINMAX: null
+  MIXUP: 0.0
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+BASE:
+- ''
+DATA:
+  BATCH_SIZE: 256
+  DATASET: cifar100
+  DATA_PATH: ./data
+  DEBUG: false
+  FNAME_FORMAT: '{}.jpeg'
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  MEAN_AND_STD_TYPE: default
+  NUM_WORKERS: 8
+  PIN_MEMORY: true
+DISTILL:
+  ENABLED: false
+  LOGITS_TOPK: 100
+  SAVE_TEACHER_LOGITS: false
+  TEACHER_LOGITS_PATH: ''
+EVAL_MODE: true
+LOCAL_RANK: 0
+MODEL:
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+  NAME: ViT-Base-CIFAR100-Teacher
+  NUM_CLASSES: 100
+  PRETRAINED: ''
+  PRETRAINED_TIMM: true
+  RESUME: output/vit_base_teacher/ViT-Base-CIFAR100-Teacher/default/ckpt_epoch_29.pth
+  TINY_VIT:
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIMS:
+    - 96
+    - 192
+    - 384
+    - 576
+    IN_CHANS: 3
+    LOCAL_CONV_SIZE: 3
+    MBCONV_EXPAND_RATIO: 4.0
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 18
+    WINDOW_SIZES:
+    - 7
+    - 7
+    - 14
+    - 7
+  TYPE: vit_base_patch16_224
+OUTPUT: output/ViT-Base-CIFAR100-Teacher/default
+PRINT_FREQ: 20
+SAVE_FREQ: 5
+SEED: 0
+TAG: default
+TEST:
+  CROP: true
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.00025
+  CLIP_GRAD: 1.0
+  EPOCHS: 30
+  EVAL_BN_WHEN_TRAINING: false
+  LAYER_LR_DECAY: 0.65
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    NAME: cosine
+  MIN_LR: 5.0e-07
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  START_EPOCH: 0
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 5.0e-08
+  WEIGHT_DECAY: 0.05

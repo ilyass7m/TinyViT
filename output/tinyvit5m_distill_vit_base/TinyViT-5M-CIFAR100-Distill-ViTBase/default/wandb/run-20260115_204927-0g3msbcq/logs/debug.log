@@ -1,0 +1,23 @@
+2026-01-15 20:49:28,030 INFO    MainThread:113680 [wandb_setup.py:_flush():80] Current SDK version is 0.23.1
+2026-01-15 20:49:28,030 INFO    MainThread:113680 [wandb_setup.py:_flush():80] Configure stats pid to 113680
+2026-01-15 20:49:28,035 INFO    MainThread:113680 [wandb_setup.py:_flush():80] Loading settings from /root/.config/wandb/settings
+2026-01-15 20:49:28,036 INFO    MainThread:113680 [wandb_setup.py:_flush():80] Loading settings from /workspace/TinyViT/wandb/settings
+2026-01-15 20:49:28,037 INFO    MainThread:113680 [wandb_setup.py:_flush():80] Loading settings from environment variables
+2026-01-15 20:49:28,038 INFO    MainThread:113680 [wandb_init.py:setup_run_log_directory():714] Logging user logs to output/tinyvit5m_distill_vit_base/TinyViT-5M-CIFAR100-Distill-ViTBase/default/wandb/run-20260115_204927-0g3msbcq/logs/debug.log
+2026-01-15 20:49:28,039 INFO    MainThread:113680 [wandb_init.py:setup_run_log_directory():715] Logging internal logs to output/tinyvit5m_distill_vit_base/TinyViT-5M-CIFAR100-Distill-ViTBase/default/wandb/run-20260115_204927-0g3msbcq/logs/debug-internal.log
+2026-01-15 20:49:28,039 INFO    MainThread:113680 [wandb_init.py:init():841] calling init triggers
+2026-01-15 20:49:28,040 INFO    MainThread:113680 [wandb_init.py:init():846] wandb.init called with sweep_config: {}
+config: {'BASE': [''], 'DATA': CfgNode({'BATCH_SIZE': 256, 'DATA_PATH': './data', 'DATASET': 'cifar100', 'MEAN_AND_STD_TYPE': 'default', 'IMG_SIZE': 224, 'INTERPOLATION': 'bicubic', 'PIN_MEMORY': True, 'NUM_WORKERS': 8, 'FNAME_FORMAT': '{}.jpeg', 'DEBUG': False}), 'MODEL': CfgNode({'TYPE': 'tiny_vit', 'NAME': 'TinyViT-5M-CIFAR100-Distill-ViTBase', 'PRETRAINED': '', 'RESUME': '', 'NUM_CLASSES': 100, 'DROP_RATE': 0.0, 'DROP_PATH_RATE': 0.0, 'LABEL_SMOOTHING': 0.0, 'PRETRAINED_TIMM': True, 'TINY_VIT': CfgNode({'IN_CHANS': 3, 'DEPTHS': [2, 2, 6, 2], 'NUM_HEADS': [2, 4, 5, 10], 'WINDOW_SIZES': [7, 7, 14, 7], 'EMBED_DIMS': [64, 128, 160, 320], 'MLP_RATIO': 4.0, 'MBCONV_EXPAND_RATIO': 4.0, 'LOCAL_CONV_SIZE': 3})}), 'DISTILL': CfgNode({'ENABLED': True, 'TEACHER_LOGITS_PATH': './output/logits/vit_base/', 'SAVE_TEACHER_LOGITS': False, 'LOGITS_TOPK': 50}), 'TRAIN': CfgNode({'START_EPOCH': 0, 'EPOCHS': 100, 'WARMUP_EPOCHS': 5, 'WEIGHT_DECAY': 0.05, 'BASE_LR': 0.001, 'WARMUP_LR': 5e-07, 'MIN_LR': 5e-06, 'CLIP_GRAD': 5.0, 'AUTO_RESUME': True, 'ACCUMULATION_STEPS': 1, 'USE_CHECKPOINT': False, 'LAYER_LR_DECAY': 0.9, 'EVAL_BN_WHEN_TRAINING': False, 'LR_SCHEDULER': CfgNode({'NAME': 'cosine', 'DECAY_EPOCHS': 30, 'DECAY_RATE': 0.1}), 'OPTIMIZER': CfgNode({'NAME': 'adamw', 'EPS': 1e-08, 'BETAS': (0.9, 0.999), 'MOMENTUM': 0.9})}), 'AUG': CfgNode({'COLOR_JITTER': 0.4, 'AUTO_AUGMENT': 'rand-m9-mstd0.5-inc1', 'REPROB': 0.25, 'REMODE': 'pixel', 'RECOUNT': 1, 'MIXUP': 0.0, 'CUTMIX': 0.0, 'CUTMIX_MINMAX': None, 'MIXUP_PROB': 1.0, 'MIXUP_SWITCH_PROB': 0.5, 'MIXUP_MODE': 'batch'}), 'TEST': CfgNode({'CROP': True}), 'AMP_ENABLE': True, 'OUTPUT': './output/tinyvit5m_distill_vit_base/TinyViT-5M-CIFAR100-Distill-ViTBase/default', 'TAG': 'default', 'SAVE_FREQ': 10, 'PRINT_FREQ': 20, 'SEED': 0, 'EVAL_MODE': False, 'THROUGHPUT_MODE': False, 'LOCAL_RANK': 0, 'git': {'branch': 'main', 'git_hash': '0e12cc5'}, '_wandb': {}}
+2026-01-15 20:49:28,040 INFO    MainThread:113680 [wandb_init.py:init():889] starting backend
+2026-01-15 20:49:29,192 INFO    MainThread:113680 [wandb_init.py:init():892] sending inform_init request
+2026-01-15 20:49:29,277 INFO    MainThread:113680 [wandb_init.py:init():900] backend started and connected
+2026-01-15 20:49:29,282 INFO    MainThread:113680 [wandb_init.py:init():970] updated telemetry
+2026-01-15 20:49:29,384 INFO    MainThread:113680 [wandb_init.py:init():994] communicating run to backend with 90.0 second timeout
+2026-01-15 20:49:30,053 INFO    MainThread:113680 [wandb_init.py:init():1041] starting run threads in backend
+2026-01-15 20:49:30,803 INFO    MainThread:113680 [wandb_run.py:_console_start():2521] atexit reg
+2026-01-15 20:49:30,807 INFO    MainThread:113680 [wandb_run.py:_redirect():2369] redirect: wrap_raw
+2026-01-15 20:49:30,808 INFO    MainThread:113680 [wandb_run.py:_redirect():2438] Wrapping output streams.
+2026-01-15 20:49:30,809 INFO    MainThread:113680 [wandb_run.py:_redirect():2461] Redirects installed.
+2026-01-15 20:49:30,861 INFO    MainThread:113680 [wandb_init.py:init():1081] run started, returning control to user process
+2026-01-15 21:30:52,363 INFO    wandb-AsyncioManager-main:113680 [service_client.py:_forward_responses():80] Reached EOF.
+2026-01-15 21:30:52,365 INFO    wandb-AsyncioManager-main:113680 [mailbox.py:close():137] Closing mailbox, abandoning 1 handles.

@@ -50,6 +50,8 @@ def add_common_args(parser):
     parser.add_argument('--use-wandb', action='store_true',
                         default=False, help='use wandb to record log')
 
+    parser.add_argument('--wandb-run-name',
+                        default="TinyViT", help='name your run')
     # distributed training
     parser.add_argument("--local_rank", type=int,
                         help='local rank for DistributedDataParallel')

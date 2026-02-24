@@ -1,0 +1,1251 @@
+[2026-01-15 17:36:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 558): INFO Full config saved to output/TinyViT-5M-CIFAR100-LargeScale/default/config.json
+[2026-01-15 17:36:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 572): INFO ===== git =====
+[2026-01-15 17:36:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 573): INFO {'branch': 'main', 'git_hash': '0e12cc5'}
+[2026-01-15 17:36:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 576): INFO AMP_ENABLE: true
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  COLOR_JITTER: 0.4
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+BASE:
+- ''
+DATA:
+  BATCH_SIZE: 512
+  DATASET: cifar100
+  DATA_PATH: ''
+  DEBUG: false
+  FNAME_FORMAT: '{}.jpeg'
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  MEAN_AND_STD_TYPE: default
+  NUM_WORKERS: 8
+  PIN_MEMORY: true
+DISTILL:
+  ENABLED: false
+  LOGITS_TOPK: 100
+  SAVE_TEACHER_LOGITS: false
+  TEACHER_LOGITS_PATH: ''
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+  NAME: TinyViT-5M-CIFAR100-LargeScale
+  NUM_CLASSES: 100
+  PRETRAINED: ''
+  PRETRAINED_TIMM: true
+  RESUME: ''
+  TINY_VIT:
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIMS:
+    - 64
+    - 128
+    - 160
+    - 320
+    IN_CHANS: 3
+    LOCAL_CONV_SIZE: 3
+    MBCONV_EXPAND_RATIO: 4.0
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 2
+    - 4
+    - 5
+    - 10
+    WINDOW_SIZES:
+    - 7
+    - 7
+    - 14
+    - 7
+  TYPE: tiny_vit
+OUTPUT: output/TinyViT-5M-CIFAR100-LargeScale/default
+PRINT_FREQ: 20
+SAVE_FREQ: 10
+SEED: 0
+TAG: default
+TEST:
+  CROP: true
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.004
+  CLIP_GRAD: 5.0
+  EPOCHS: 100
+  EVAL_BN_WHEN_TRAINING: false
+  LAYER_LR_DECAY: 0.9
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    NAME: cosine
+  MIN_LR: 2.0e-05
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  START_EPOCH: 0
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 2.0e-06
+  WEIGHT_DECAY: 0.05
+
+[2026-01-15 17:36:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 62): INFO Creating model:tiny_vit/TinyViT-5M-CIFAR100-LargeScale
+[2026-01-15 17:36:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 70): INFO TinyViT(
+  (patch_embed): PatchEmbed(
+    (seq): Sequential(
+      (0): Conv2d_BN(
+        (c): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): GELU(approximate='none')
+      (2): Conv2d_BN(
+        (c): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (layers): ModuleList(
+    (0): ConvLayer(
+      (blocks): ModuleList(
+        (0-1): 2 x MBConv(
+          (conv1): Conv2d_BN(
+            (c): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act1): GELU(approximate='none')
+          (conv2): Conv2d_BN(
+            (c): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256, bias=False)
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act2): GELU(approximate='none')
+          (conv3): Conv2d_BN(
+            (c): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act3): GELU(approximate='none')
+          (drop_path): Identity()
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=128, bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (1): BasicLayer(
+      dim=128, input_resolution=(28, 28), depth=2
+      (blocks): ModuleList(
+        (0-1): 2 x TinyViTBlock(
+          dim=128, input_resolution=(28, 28), num_heads=4, window_size=7, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=128, out_features=384, bias=True)
+            (proj): Linear(in_features=128, out_features=128, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=128, out_features=512, bias=True)
+            (fc2): Linear(in_features=512, out_features=128, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(128, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(160, 160, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=160, bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(160, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (2): BasicLayer(
+      dim=160, input_resolution=(14, 14), depth=6
+      (blocks): ModuleList(
+        (0-5): 6 x TinyViTBlock(
+          dim=160, input_resolution=(14, 14), num_heads=5, window_size=14, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((160,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=160, out_features=480, bias=True)
+            (proj): Linear(in_features=160, out_features=160, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((160,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=160, out_features=640, bias=True)
+            (fc2): Linear(in_features=640, out_features=160, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+            (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(160, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(320, 320, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=320, bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(320, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (3): BasicLayer(
+      dim=320, input_resolution=(7, 7), depth=2
+      (blocks): ModuleList(
+        (0-1): 2 x TinyViTBlock(
+          dim=320, input_resolution=(7, 7), num_heads=10, window_size=7, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=320, out_features=960, bias=True)
+            (proj): Linear(in_features=320, out_features=320, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=320, out_features=1280, bias=True)
+            (fc2): Linear(in_features=1280, out_features=320, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320, bias=False)
+            (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+    )
+  )
+  (norm_head): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+  (head): Linear(in_features=320, out_features=100, bias=True)
+)
+[2026-01-15 17:36:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 85): INFO number of params: 5103864
+[2026-01-15 17:36:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 121): INFO no checkpoint found in output/TinyViT-5M-CIFAR100-LargeScale/default, ignoring auto resume
+[2026-01-15 17:36:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 143): INFO Start training
+[2026-01-15 17:36:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [0/100][0/48]	eta 0:28:28 lr 0.000001	time 35.5839 (35.5839)	loss 4.6505 (4.6505)	Acc@1 1.367 (1.367)	Acc@5 4.688 (4.688)	grad_norm 1.0750 (1.0750)	loss_scale 65536.0000 (65536.0000)	mem 27893MB
+[2026-01-15 17:37:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [0/100][20/48]	eta 0:01:02 lr 0.000105	time 0.5567 (2.2266)	loss 4.5966 (4.6305)	Acc@1 2.344 (1.302)	Acc@5 7.617 (5.869)	grad_norm 0.7829 (0.8798)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:37:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [0/100][40/48]	eta 0:00:11 lr 0.000210	time 0.5514 (1.4116)	loss 4.4972 (4.5948)	Acc@1 3.711 (1.967)	Acc@5 14.258 (8.103)	grad_norm 0.8002 (0.8175)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:37:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 0 training takes 0:01:01
+[2026-01-15 17:37:19 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_0.pth saving......
+[2026-01-15 17:37:19 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_0.pth saved !!!
+[2026-01-15 17:37:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.170 (2.170)	Loss 4.2031 (4.2031)	Acc@1 7.031 (7.031)	Acc@5 22.852 (22.852)	Mem 27934MB
+[2026-01-15 17:37:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:37:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 6.210 Acc@5 21.770
+[2026-01-15 17:37:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 6.2%
+[2026-01-15 17:37:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 6.21%
+[2026-01-15 17:37:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [1/100][0/48]	eta 0:02:58 lr 0.000252	time 3.7093 (3.7093)	loss 4.4875 (4.4875)	Acc@1 4.492 (4.492)	Acc@5 15.234 (15.234)	grad_norm 0.7010 (0.7010)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:37:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [1/100][20/48]	eta 0:00:19 lr 0.000356	time 0.5546 (0.7073)	loss 4.4377 (4.4842)	Acc@1 4.883 (4.139)	Acc@5 17.188 (15.606)	grad_norm 0.7454 (0.7820)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:37:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [1/100][40/48]	eta 0:00:05 lr 0.000461	time 0.5632 (0.6356)	loss 4.4328 (4.4723)	Acc@1 6.055 (4.330)	Acc@5 19.531 (16.106)	grad_norm 0.6714 (0.7730)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:37:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 1 training takes 0:00:30
+[2026-01-15 17:38:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.604 (2.604)	Loss 3.9590 (3.9590)	Acc@1 10.742 (10.742)	Acc@5 31.055 (31.055)	Mem 27934MB
+[2026-01-15 17:38:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:38:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 9.650 Acc@5 31.080
+[2026-01-15 17:38:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 9.7%
+[2026-01-15 17:38:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 9.65%
+[2026-01-15 17:38:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [2/100][0/48]	eta 0:03:41 lr 0.000502	time 4.6096 (4.6096)	loss 4.5053 (4.5053)	Acc@1 2.930 (2.930)	Acc@5 14.062 (14.062)	grad_norm 0.7549 (0.7549)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:38:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [2/100][20/48]	eta 0:00:20 lr 0.000607	time 0.5555 (0.7486)	loss 4.4779 (4.4464)	Acc@1 5.469 (4.976)	Acc@5 14.062 (17.736)	grad_norm 0.7738 (0.7469)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:38:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [2/100][40/48]	eta 0:00:05 lr 0.000712	time 0.5580 (0.6559)	loss 4.3294 (4.4290)	Acc@1 6.250 (5.402)	Acc@5 24.219 (18.517)	grad_norm 0.7229 (0.7357)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:38:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 2 training takes 0:00:31
+[2026-01-15 17:38:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.544 (2.544)	Loss 3.8125 (3.8125)	Acc@1 11.914 (11.914)	Acc@5 34.570 (34.570)	Mem 27934MB
+[2026-01-15 17:38:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:38:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 12.020 Acc@5 35.200
+[2026-01-15 17:38:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 12.0%
+[2026-01-15 17:38:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 12.02%
+[2026-01-15 17:38:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [3/100][0/48]	eta 0:03:47 lr 0.000753	time 4.7304 (4.7304)	loss 4.4248 (4.4248)	Acc@1 6.055 (6.055)	Acc@5 19.336 (19.336)	grad_norm 0.6287 (0.6287)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:38:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [3/100][20/48]	eta 0:00:21 lr 0.000858	time 0.5542 (0.7545)	loss 4.4686 (4.3822)	Acc@1 2.930 (6.762)	Acc@5 16.406 (21.549)	grad_norm 0.8027 (0.6729)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:39:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [3/100][40/48]	eta 0:00:05 lr 0.000962	time 0.5620 (0.6590)	loss 4.3788 (4.3598)	Acc@1 5.859 (7.022)	Acc@5 19.531 (22.013)	grad_norm 0.8212 (0.6874)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:39:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 3 training takes 0:00:31
+[2026-01-15 17:39:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.235 (2.235)	Loss 3.6992 (3.6992)	Acc@1 13.477 (13.477)	Acc@5 37.109 (37.109)	Mem 27934MB
+[2026-01-15 17:39:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:39:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 14.200 Acc@5 37.740
+[2026-01-15 17:39:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 14.2%
+[2026-01-15 17:39:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.20%
+[2026-01-15 17:39:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [4/100][0/48]	eta 0:02:28 lr 0.001004	time 3.1017 (3.1017)	loss 4.3244 (4.3244)	Acc@1 8.203 (8.203)	Acc@5 26.172 (26.172)	grad_norm 0.7153 (0.7153)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:39:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [4/100][20/48]	eta 0:00:19 lr 0.001109	time 0.5580 (0.6838)	loss 4.1522 (4.2931)	Acc@1 8.984 (8.222)	Acc@5 29.688 (25.605)	grad_norm 0.7249 (0.6961)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:39:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [4/100][40/48]	eta 0:00:04 lr 0.001213	time 0.5610 (0.6230)	loss 4.1847 (4.3007)	Acc@1 11.133 (8.051)	Acc@5 29.492 (24.652)	grad_norm 0.7554 (0.7029)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:39:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 4 training takes 0:00:29
+[2026-01-15 17:39:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.403 (2.403)	Loss 3.6367 (3.6367)	Acc@1 13.672 (13.672)	Acc@5 41.016 (41.016)	Mem 27934MB
+[2026-01-15 17:39:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:39:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 14.580 Acc@5 40.460
+[2026-01-15 17:39:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 14.6%
+[2026-01-15 17:39:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:39:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [5/100][0/48]	eta 0:02:57 lr 0.001248	time 3.6903 (3.6903)	loss 4.3661 (4.3661)	Acc@1 6.250 (6.250)	Acc@5 24.609 (24.609)	grad_norm 0.6794 (0.6794)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:40:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [5/100][20/48]	eta 0:00:19 lr 0.001246	time 0.5587 (0.7101)	loss 4.2371 (4.2875)	Acc@1 11.523 (8.305)	Acc@5 28.906 (25.195)	grad_norm 0.7532 (0.7266)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:40:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [5/100][40/48]	eta 0:00:05 lr 0.001245	time 0.5606 (0.6365)	loss 4.3648 (4.3090)	Acc@1 7.227 (7.932)	Acc@5 22.461 (24.324)	grad_norm 0.7001 (0.7411)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:40:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 5 training takes 0:00:30
+[2026-01-15 17:40:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.981 (1.981)	Loss 3.5488 (3.5488)	Acc@1 14.844 (14.844)	Acc@5 42.188 (42.188)	Mem 27934MB
+[2026-01-15 17:40:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:40:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 14.000 Acc@5 39.790
+[2026-01-15 17:40:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 14.0%
+[2026-01-15 17:40:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:40:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [6/100][0/48]	eta 0:03:28 lr 0.001244	time 4.3492 (4.3492)	loss 4.2832 (4.2832)	Acc@1 7.422 (7.422)	Acc@5 25.781 (25.781)	grad_norm 0.8209 (0.8209)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:40:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [6/100][20/48]	eta 0:00:20 lr 0.001243	time 0.5557 (0.7374)	loss 4.4569 (4.3093)	Acc@1 4.688 (7.403)	Acc@5 14.648 (22.926)	grad_norm 1.0370 (0.9387)	loss_scale 65536.0000 (65536.0000)	mem 27934MB
+[2026-01-15 17:40:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [6/100][40/48]	eta 0:00:05 lr 0.001241	time 0.5518 (0.6499)	loss 4.2998 (4.3699)	Acc@1 5.859 (6.426)	Acc@5 23.633 (20.965)	grad_norm 3.1399 (1.3509)	loss_scale 32768.0000 (61539.9024)	mem 27934MB
+[2026-01-15 17:40:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 6 training takes 0:00:30
+[2026-01-15 17:40:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.016 (2.016)	Loss 4.0586 (4.0586)	Acc@1 6.836 (6.836)	Acc@5 24.219 (24.219)	Mem 27934MB
+[2026-01-15 17:40:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:40:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 8.020 Acc@5 24.840
+[2026-01-15 17:40:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 8.0%
+[2026-01-15 17:40:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:41:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [7/100][0/48]	eta 0:02:49 lr 0.001240	time 3.5318 (3.5318)	loss 4.4321 (4.4321)	Acc@1 4.688 (4.688)	Acc@5 16.602 (16.602)	grad_norm 3.7380 (3.7380)	loss_scale 32768.0000 (32768.0000)	mem 27934MB
+[2026-01-15 17:41:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [7/100][20/48]	eta 0:00:19 lr 0.001238	time 0.5595 (0.7008)	loss 4.4854 (4.4992)	Acc@1 3.711 (3.646)	Acc@5 15.039 (13.932)	grad_norm 14.5187 (6.1912)	loss_scale 16384.0000 (30427.4286)	mem 27934MB
+[2026-01-15 17:41:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [7/100][40/48]	eta 0:00:05 lr 0.001236	time 0.5593 (0.6322)	loss 4.5265 (4.5164)	Acc@1 2.539 (3.135)	Acc@5 12.305 (12.795)	grad_norm 12.1433 (7.2194)	loss_scale 8192.0000 (20979.5122)	mem 27934MB
+[2026-01-15 17:41:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 7 training takes 0:00:30
+[2026-01-15 17:41:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.608 (2.608)	Loss 4.3555 (4.3555)	Acc@1 4.102 (4.102)	Acc@5 16.016 (16.016)	Mem 27934MB
+[2026-01-15 17:41:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:41:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 4.290 Acc@5 14.930
+[2026-01-15 17:41:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 4.3%
+[2026-01-15 17:41:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:41:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [8/100][0/48]	eta 0:03:33 lr 0.001236	time 4.4434 (4.4434)	loss 4.4803 (4.4803)	Acc@1 4.102 (4.102)	Acc@5 12.109 (12.109)	grad_norm 11.1356 (11.1356)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 17:41:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [8/100][20/48]	eta 0:00:20 lr 0.001234	time 0.5583 (0.7424)	loss 4.5486 (4.5451)	Acc@1 2.344 (2.772)	Acc@5 10.742 (11.077)	grad_norm 11.9555 (14.8350)	loss_scale 4096.0000 (6436.5714)	mem 27934MB
+[2026-01-15 17:41:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [8/100][40/48]	eta 0:00:05 lr 0.001231	time 0.5542 (0.6522)	loss 4.5864 (4.5442)	Acc@1 1.562 (2.806)	Acc@5 10.352 (11.328)	grad_norm 12.8370 (11.9106)	loss_scale 4096.0000 (5294.8293)	mem 27934MB
+[2026-01-15 17:42:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 8 training takes 0:00:30
+[2026-01-15 17:42:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.262 (2.262)	Loss 4.4023 (4.4023)	Acc@1 2.148 (2.148)	Acc@5 14.648 (14.648)	Mem 27934MB
+[2026-01-15 17:42:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:42:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 3.110 Acc@5 14.820
+[2026-01-15 17:42:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 3.1%
+[2026-01-15 17:42:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:42:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [9/100][0/48]	eta 0:03:37 lr 0.001230	time 4.5290 (4.5290)	loss 4.5548 (4.5548)	Acc@1 2.539 (2.539)	Acc@5 11.328 (11.328)	grad_norm 6.6276 (6.6276)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:42:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [9/100][20/48]	eta 0:00:20 lr 0.001228	time 0.5557 (0.7461)	loss 4.5346 (4.5433)	Acc@1 1.953 (2.716)	Acc@5 8.789 (10.882)	grad_norm 3.7130 (5.3669)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:42:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [9/100][40/48]	eta 0:00:05 lr 0.001226	time 0.5579 (0.6544)	loss 4.5399 (4.5441)	Acc@1 3.125 (2.715)	Acc@5 11.523 (11.004)	grad_norm 4.6469 (6.2611)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:42:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 9 training takes 0:00:30
+[2026-01-15 17:42:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.619 (1.619)	Loss 4.3359 (4.3359)	Acc@1 3.711 (3.711)	Acc@5 20.117 (20.117)	Mem 27934MB
+[2026-01-15 17:42:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:42:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 5.200 Acc@5 19.180
+[2026-01-15 17:42:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 5.2%
+[2026-01-15 17:42:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:42:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [10/100][0/48]	eta 0:03:44 lr 0.001225	time 4.6856 (4.6856)	loss 4.5370 (4.5370)	Acc@1 4.102 (4.102)	Acc@5 11.914 (11.914)	grad_norm 5.6230 (5.6230)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:42:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [10/100][20/48]	eta 0:00:21 lr 0.001222	time 0.5558 (0.7542)	loss 4.5292 (4.5377)	Acc@1 1.953 (2.837)	Acc@5 11.719 (11.793)	grad_norm 10.2026 (4.8033)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:43:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [10/100][40/48]	eta 0:00:05 lr 0.001219	time 0.5588 (0.6586)	loss 4.4995 (4.5406)	Acc@1 3.125 (2.749)	Acc@5 14.258 (11.538)	grad_norm 1.6371 (3.7532)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:43:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 10 training takes 0:00:31
+[2026-01-15 17:43:13 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_10.pth saving......
+[2026-01-15 17:43:14 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_10.pth saved !!!
+[2026-01-15 17:43:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.355 (2.355)	Loss 4.2422 (4.2422)	Acc@1 6.250 (6.250)	Acc@5 19.141 (19.141)	Mem 27934MB
+[2026-01-15 17:43:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:43:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 5.430 Acc@5 20.850
+[2026-01-15 17:43:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 5.4%
+[2026-01-15 17:43:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:43:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [11/100][0/48]	eta 0:02:35 lr 0.001218	time 3.2422 (3.2422)	loss 4.5306 (4.5306)	Acc@1 2.734 (2.734)	Acc@5 13.477 (13.477)	grad_norm 2.7931 (2.7931)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:43:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [11/100][20/48]	eta 0:00:19 lr 0.001216	time 0.5572 (0.6936)	loss 4.5340 (4.5134)	Acc@1 2.148 (3.506)	Acc@5 10.742 (13.393)	grad_norm 2.1747 (3.0669)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:43:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [11/100][40/48]	eta 0:00:05 lr 0.001213	time 0.5584 (0.6274)	loss 4.4986 (4.5192)	Acc@1 3.516 (3.301)	Acc@5 13.477 (13.038)	grad_norm 7.2964 (3.3527)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:43:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 11 training takes 0:00:29
+[2026-01-15 17:43:51 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.399 (2.399)	Loss 4.2773 (4.2773)	Acc@1 4.688 (4.688)	Acc@5 18.945 (18.945)	Mem 27934MB
+[2026-01-15 17:43:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:43:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 5.310 Acc@5 20.250
+[2026-01-15 17:43:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 5.3%
+[2026-01-15 17:43:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:43:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [12/100][0/48]	eta 0:02:43 lr 0.001211	time 3.4148 (3.4148)	loss 4.5423 (4.5423)	Acc@1 2.734 (2.734)	Acc@5 12.891 (12.891)	grad_norm 3.4353 (3.4353)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [12/100][20/48]	eta 0:00:19 lr 0.001208	time 0.5602 (0.6936)	loss 4.5331 (4.5197)	Acc@1 2.539 (2.688)	Acc@5 13.086 (12.593)	grad_norm 5.6067 (8.9844)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [12/100][40/48]	eta 0:00:05 lr 0.001205	time 0.5579 (0.6275)	loss 4.5364 (4.5205)	Acc@1 2.539 (2.730)	Acc@5 10.547 (12.376)	grad_norm 2.1597 (6.7489)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 12 training takes 0:00:29
+[2026-01-15 17:44:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.691 (2.691)	Loss 4.3945 (4.3945)	Acc@1 3.711 (3.711)	Acc@5 15.430 (15.430)	Mem 27934MB
+[2026-01-15 17:44:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:44:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 3.750 Acc@5 14.730
+[2026-01-15 17:44:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 3.8%
+[2026-01-15 17:44:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:44:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [13/100][0/48]	eta 0:03:56 lr 0.001204	time 4.9348 (4.9348)	loss 4.5193 (4.5193)	Acc@1 2.539 (2.539)	Acc@5 11.133 (11.133)	grad_norm 2.0799 (2.0799)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [13/100][20/48]	eta 0:00:21 lr 0.001201	time 0.5608 (0.7664)	loss 4.4445 (4.5082)	Acc@1 5.078 (3.320)	Acc@5 15.039 (12.863)	grad_norm 5.0114 (2.9816)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [13/100][40/48]	eta 0:00:05 lr 0.001197	time 0.5561 (0.6643)	loss 4.4924 (4.5075)	Acc@1 3.516 (3.254)	Acc@5 14.844 (13.124)	grad_norm 4.5314 (3.9006)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:44:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 13 training takes 0:00:31
+[2026-01-15 17:45:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 3.287 (3.287)	Loss 4.2969 (4.2969)	Acc@1 3.906 (3.906)	Acc@5 17.188 (17.188)	Mem 27934MB
+[2026-01-15 17:45:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:45:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 4.200 Acc@5 17.070
+[2026-01-15 17:45:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 4.2%
+[2026-01-15 17:45:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:45:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [14/100][0/48]	eta 0:03:21 lr 0.001196	time 4.2067 (4.2067)	loss 4.5435 (4.5435)	Acc@1 1.953 (1.953)	Acc@5 10.938 (10.938)	grad_norm 3.0875 (3.0875)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:45:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [14/100][20/48]	eta 0:00:21 lr 0.001192	time 0.5518 (0.7567)	loss 4.5731 (4.5222)	Acc@1 1.367 (2.827)	Acc@5 7.812 (12.137)	grad_norm 14.3358 (5.2216)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:45:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [14/100][40/48]	eta 0:00:05 lr 0.001189	time 0.5620 (0.6598)	loss 4.5288 (4.5284)	Acc@1 3.516 (2.739)	Acc@5 12.891 (11.728)	grad_norm 3.6888 (5.7551)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:45:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 14 training takes 0:00:31
+[2026-01-15 17:45:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.542 (2.542)	Loss 4.2344 (4.2344)	Acc@1 6.445 (6.445)	Acc@5 22.656 (22.656)	Mem 27934MB
+[2026-01-15 17:45:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:45:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 5.630 Acc@5 20.690
+[2026-01-15 17:45:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 5.6%
+[2026-01-15 17:45:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:45:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [15/100][0/48]	eta 0:03:18 lr 0.001187	time 4.1379 (4.1379)	loss 4.5638 (4.5638)	Acc@1 2.734 (2.734)	Acc@5 9.961 (9.961)	grad_norm 2.4001 (2.4001)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:45:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [15/100][20/48]	eta 0:00:20 lr 0.001183	time 0.5544 (0.7285)	loss 4.5723 (4.5275)	Acc@1 1.367 (3.125)	Acc@5 7.422 (12.416)	grad_norm 1.4579 (3.5237)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:46:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [15/100][40/48]	eta 0:00:05 lr 0.001180	time 0.5572 (0.6455)	loss 4.5324 (4.5232)	Acc@1 1.953 (3.220)	Acc@5 9.375 (12.557)	grad_norm 2.3738 (3.2881)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:46:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 15 training takes 0:00:30
+[2026-01-15 17:46:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.067 (2.067)	Loss 4.1602 (4.1602)	Acc@1 6.250 (6.250)	Acc@5 25.586 (25.586)	Mem 27934MB
+[2026-01-15 17:46:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:46:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 7.530 Acc@5 24.550
+[2026-01-15 17:46:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 7.5%
+[2026-01-15 17:46:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:46:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [16/100][0/48]	eta 0:03:24 lr 0.001178	time 4.2673 (4.2673)	loss 4.4680 (4.4680)	Acc@1 4.883 (4.883)	Acc@5 16.797 (16.797)	grad_norm 1.6540 (1.6540)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:46:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [16/100][20/48]	eta 0:00:20 lr 0.001174	time 0.5551 (0.7337)	loss 4.5015 (4.5000)	Acc@1 3.320 (3.609)	Acc@5 14.258 (14.388)	grad_norm 1.5294 (2.0375)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:46:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [16/100][40/48]	eta 0:00:05 lr 0.001170	time 0.5588 (0.6483)	loss 4.4119 (4.4924)	Acc@1 5.273 (3.873)	Acc@5 15.625 (14.501)	grad_norm 2.0517 (2.2580)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:46:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 16 training takes 0:00:30
+[2026-01-15 17:46:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.940 (1.940)	Loss 4.2227 (4.2227)	Acc@1 6.055 (6.055)	Acc@5 22.070 (22.070)	Mem 27934MB
+[2026-01-15 17:46:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:46:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 7.020 Acc@5 23.510
+[2026-01-15 17:46:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 7.0%
+[2026-01-15 17:46:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:46:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [17/100][0/48]	eta 0:02:54 lr 0.001168	time 3.6273 (3.6273)	loss 4.5452 (4.5452)	Acc@1 2.539 (2.539)	Acc@5 12.695 (12.695)	grad_norm 1.0710 (1.0710)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [17/100][20/48]	eta 0:00:19 lr 0.001164	time 0.5556 (0.7039)	loss 4.3877 (4.4705)	Acc@1 4.883 (4.148)	Acc@5 17.578 (15.430)	grad_norm 0.9271 (1.7450)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [17/100][40/48]	eta 0:00:05 lr 0.001160	time 0.5528 (0.6326)	loss 4.4299 (4.4691)	Acc@1 5.078 (4.397)	Acc@5 17.773 (15.758)	grad_norm 1.2506 (1.6189)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 17 training takes 0:00:29
+[2026-01-15 17:47:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.243 (2.243)	Loss 4.0625 (4.0625)	Acc@1 8.398 (8.398)	Acc@5 27.344 (27.344)	Mem 27934MB
+[2026-01-15 17:47:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:47:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 8.890 Acc@5 28.150
+[2026-01-15 17:47:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 8.9%
+[2026-01-15 17:47:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:47:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [18/100][0/48]	eta 0:03:33 lr 0.001158	time 4.4492 (4.4492)	loss 4.4689 (4.4689)	Acc@1 4.883 (4.883)	Acc@5 16.211 (16.211)	grad_norm 1.3523 (1.3523)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [18/100][20/48]	eta 0:00:20 lr 0.001154	time 0.5607 (0.7423)	loss 4.4036 (4.4569)	Acc@1 4.297 (4.594)	Acc@5 17.773 (16.350)	grad_norm 1.2211 (1.0713)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [18/100][40/48]	eta 0:00:05 lr 0.001149	time 0.5552 (0.6518)	loss 4.4663 (4.4638)	Acc@1 5.664 (4.421)	Acc@5 17.188 (16.168)	grad_norm 1.0946 (1.0088)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:47:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 18 training takes 0:00:30
+[2026-01-15 17:47:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.115 (2.115)	Loss 4.0195 (4.0195)	Acc@1 8.203 (8.203)	Acc@5 27.930 (27.930)	Mem 27934MB
+[2026-01-15 17:47:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:47:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 8.530 Acc@5 27.910
+[2026-01-15 17:47:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 8.5%
+[2026-01-15 17:47:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:48:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [19/100][0/48]	eta 0:02:45 lr 0.001147	time 3.4445 (3.4445)	loss 4.4684 (4.4684)	Acc@1 6.055 (6.055)	Acc@5 19.727 (19.727)	grad_norm 0.5578 (0.5578)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:48:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [19/100][20/48]	eta 0:00:19 lr 0.001143	time 0.5587 (0.6941)	loss 4.4281 (4.4837)	Acc@1 5.469 (4.390)	Acc@5 17.773 (16.099)	grad_norm 0.6266 (0.6920)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:48:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [19/100][40/48]	eta 0:00:05 lr 0.001138	time 0.5639 (0.6287)	loss 4.4141 (4.4563)	Acc@1 5.078 (4.759)	Acc@5 19.336 (16.964)	grad_norm 0.6099 (0.8132)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:48:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 19 training takes 0:00:29
+[2026-01-15 17:48:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.406 (2.406)	Loss 3.9199 (3.9199)	Acc@1 12.305 (12.305)	Acc@5 35.156 (35.156)	Mem 27934MB
+[2026-01-15 17:48:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:48:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 11.170 Acc@5 32.720
+[2026-01-15 17:48:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 11.2%
+[2026-01-15 17:48:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:48:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [20/100][0/48]	eta 0:03:42 lr 0.001136	time 4.6306 (4.6306)	loss 4.5360 (4.5360)	Acc@1 3.906 (3.906)	Acc@5 14.844 (14.844)	grad_norm 0.5045 (0.5045)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:48:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [20/100][20/48]	eta 0:00:21 lr 0.001131	time 0.5606 (0.7512)	loss 4.5265 (4.4708)	Acc@1 3.711 (4.399)	Acc@5 11.719 (15.941)	grad_norm 0.4037 (0.5743)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:48:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [20/100][40/48]	eta 0:00:05 lr 0.001126	time 0.5555 (0.6567)	loss 4.4183 (4.4594)	Acc@1 4.297 (4.554)	Acc@5 18.750 (16.349)	grad_norm 0.4736 (0.5728)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:49:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 20 training takes 0:00:30
+[2026-01-15 17:49:03 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_20.pth saving......
+[2026-01-15 17:49:03 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_20.pth saved !!!
+[2026-01-15 17:49:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.029 (2.029)	Loss 3.9316 (3.9316)	Acc@1 11.914 (11.914)	Acc@5 34.570 (34.570)	Mem 27934MB
+[2026-01-15 17:49:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:49:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 12.970 Acc@5 35.820
+[2026-01-15 17:49:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 13.0%
+[2026-01-15 17:49:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:49:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [21/100][0/48]	eta 0:03:23 lr 0.001124	time 4.2313 (4.2313)	loss 4.4619 (4.4619)	Acc@1 5.078 (5.078)	Acc@5 18.945 (18.945)	grad_norm 0.8960 (0.8960)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:49:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [21/100][20/48]	eta 0:00:20 lr 0.001119	time 0.5555 (0.7336)	loss 4.4884 (4.4152)	Acc@1 3.125 (5.525)	Acc@5 14.062 (18.480)	grad_norm 0.8274 (0.5893)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:49:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [21/100][40/48]	eta 0:00:05 lr 0.001114	time 0.5553 (0.6473)	loss 4.4818 (4.4251)	Acc@1 5.078 (5.474)	Acc@5 16.211 (18.417)	grad_norm 0.4308 (0.5573)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:49:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 21 training takes 0:00:30
+[2026-01-15 17:49:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 3.154 (3.154)	Loss 3.8340 (3.8340)	Acc@1 14.453 (14.453)	Acc@5 37.891 (37.891)	Mem 27934MB
+[2026-01-15 17:49:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:49:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 12.580 Acc@5 37.550
+[2026-01-15 17:49:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 12.6%
+[2026-01-15 17:49:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:49:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [22/100][0/48]	eta 0:03:33 lr 0.001112	time 4.4433 (4.4433)	loss 4.4810 (4.4810)	Acc@1 3.516 (3.516)	Acc@5 15.820 (15.820)	grad_norm 0.4497 (0.4497)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:49:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [22/100][20/48]	eta 0:00:20 lr 0.001107	time 0.5611 (0.7434)	loss 4.4958 (4.4089)	Acc@1 2.930 (5.794)	Acc@5 14.453 (19.355)	grad_norm 0.5315 (0.5196)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:50:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [22/100][40/48]	eta 0:00:05 lr 0.001101	time 0.5547 (0.6524)	loss 4.5289 (4.4056)	Acc@1 3.320 (5.645)	Acc@5 14.062 (19.203)	grad_norm 0.3754 (0.4872)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:50:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 22 training takes 0:00:30
+[2026-01-15 17:50:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.424 (2.424)	Loss 3.8496 (3.8496)	Acc@1 13.086 (13.086)	Acc@5 37.109 (37.109)	Mem 27934MB
+[2026-01-15 17:50:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:50:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 13.880 Acc@5 38.010
+[2026-01-15 17:50:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 13.9%
+[2026-01-15 17:50:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:50:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [23/100][0/48]	eta 0:02:56 lr 0.001099	time 3.6778 (3.6778)	loss 4.3408 (4.3408)	Acc@1 7.227 (7.227)	Acc@5 20.898 (20.898)	grad_norm 0.3326 (0.3326)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:50:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [23/100][20/48]	eta 0:00:19 lr 0.001094	time 0.5543 (0.7047)	loss 4.5408 (4.4197)	Acc@1 2.930 (5.599)	Acc@5 13.086 (19.131)	grad_norm 0.4130 (0.3784)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:50:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [23/100][40/48]	eta 0:00:05 lr 0.001088	time 0.5605 (0.6341)	loss 4.4054 (4.4251)	Acc@1 5.078 (5.616)	Acc@5 19.531 (18.988)	grad_norm 0.4523 (0.3803)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:50:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 23 training takes 0:00:30
+[2026-01-15 17:50:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.168 (2.168)	Loss 3.7305 (3.7305)	Acc@1 14.648 (14.648)	Acc@5 39.258 (39.258)	Mem 27934MB
+[2026-01-15 17:50:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:50:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 14.550 Acc@5 39.270
+[2026-01-15 17:50:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 14.6%
+[2026-01-15 17:50:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 14.58%
+[2026-01-15 17:50:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [24/100][0/48]	eta 0:03:15 lr 0.001086	time 4.0798 (4.0798)	loss 4.4193 (4.4193)	Acc@1 7.422 (7.422)	Acc@5 23.828 (23.828)	grad_norm 0.3515 (0.3515)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [24/100][20/48]	eta 0:00:20 lr 0.001080	time 0.5553 (0.7250)	loss 4.4180 (4.3866)	Acc@1 6.055 (6.622)	Acc@5 19.727 (21.103)	grad_norm 0.2571 (0.3550)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [24/100][40/48]	eta 0:00:05 lr 0.001075	time 0.5547 (0.6428)	loss 4.3902 (4.4078)	Acc@1 6.445 (6.321)	Acc@5 22.461 (19.965)	grad_norm 0.3346 (0.3305)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 24 training takes 0:00:30
+[2026-01-15 17:51:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.017 (2.017)	Loss 3.7168 (3.7168)	Acc@1 15.039 (15.039)	Acc@5 41.016 (41.016)	Mem 27934MB
+[2026-01-15 17:51:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:51:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 15.150 Acc@5 41.380
+[2026-01-15 17:51:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 15.2%
+[2026-01-15 17:51:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 15.15%
+[2026-01-15 17:51:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [25/100][0/48]	eta 0:02:51 lr 0.001072	time 3.5766 (3.5766)	loss 4.3932 (4.3932)	Acc@1 6.445 (6.445)	Acc@5 23.828 (23.828)	grad_norm 0.3055 (0.3055)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [25/100][20/48]	eta 0:00:19 lr 0.001067	time 0.5559 (0.7006)	loss 4.1743 (4.3405)	Acc@1 9.961 (7.254)	Acc@5 28.711 (22.712)	grad_norm 0.4074 (0.3626)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [25/100][40/48]	eta 0:00:05 lr 0.001061	time 0.5567 (0.6300)	loss 4.4336 (4.3659)	Acc@1 5.273 (6.850)	Acc@5 21.289 (21.837)	grad_norm 0.2940 (0.3641)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:51:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 25 training takes 0:00:29
+[2026-01-15 17:51:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.053 (2.053)	Loss 3.8086 (3.8086)	Acc@1 14.648 (14.648)	Acc@5 36.914 (36.914)	Mem 27934MB
+[2026-01-15 17:52:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:52:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 15.290 Acc@5 40.160
+[2026-01-15 17:52:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 15.3%
+[2026-01-15 17:52:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 15.29%
+[2026-01-15 17:52:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [26/100][0/48]	eta 0:03:02 lr 0.001058	time 3.7930 (3.7930)	loss 4.1808 (4.1808)	Acc@1 8.789 (8.789)	Acc@5 26.367 (26.367)	grad_norm 0.4097 (0.4097)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:52:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [26/100][20/48]	eta 0:00:19 lr 0.001052	time 0.5605 (0.7108)	loss 4.4600 (4.3712)	Acc@1 5.078 (7.013)	Acc@5 15.625 (21.791)	grad_norm 0.2752 (0.3459)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:52:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [26/100][40/48]	eta 0:00:05 lr 0.001046	time 0.5541 (0.6363)	loss 4.3577 (4.3844)	Acc@1 8.398 (6.598)	Acc@5 21.289 (21.032)	grad_norm 0.3337 (0.3394)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:52:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 26 training takes 0:00:30
+[2026-01-15 17:52:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.046 (2.046)	Loss 3.6328 (3.6328)	Acc@1 15.820 (15.820)	Acc@5 44.336 (44.336)	Mem 27934MB
+[2026-01-15 17:52:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:52:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 17.190 Acc@5 43.340
+[2026-01-15 17:52:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 17.2%
+[2026-01-15 17:52:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 17.19%
+[2026-01-15 17:52:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [27/100][0/48]	eta 0:03:30 lr 0.001044	time 4.3948 (4.3948)	loss 4.2723 (4.2723)	Acc@1 6.445 (6.445)	Acc@5 25.781 (25.781)	grad_norm 0.3159 (0.3159)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:52:51 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [27/100][20/48]	eta 0:00:20 lr 0.001038	time 0.5561 (0.7395)	loss 4.2511 (4.3198)	Acc@1 8.789 (7.599)	Acc@5 27.344 (23.670)	grad_norm 0.5360 (0.3707)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [27/100][40/48]	eta 0:00:05 lr 0.001031	time 0.5545 (0.6502)	loss 4.4719 (4.3313)	Acc@1 4.492 (7.484)	Acc@5 15.039 (23.042)	grad_norm 0.2379 (0.3439)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 27 training takes 0:00:30
+[2026-01-15 17:53:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.146 (2.146)	Loss 3.6094 (3.6094)	Acc@1 16.797 (16.797)	Acc@5 42.969 (42.969)	Mem 27934MB
+[2026-01-15 17:53:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:53:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 17.350 Acc@5 42.580
+[2026-01-15 17:53:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 17.4%
+[2026-01-15 17:53:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 17.35%
+[2026-01-15 17:53:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [28/100][0/48]	eta 0:03:16 lr 0.001029	time 4.0948 (4.0948)	loss 4.3633 (4.3633)	Acc@1 7.227 (7.227)	Acc@5 23.828 (23.828)	grad_norm 0.2885 (0.2885)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [28/100][20/48]	eta 0:00:20 lr 0.001022	time 0.5572 (0.7257)	loss 4.4650 (4.4003)	Acc@1 4.297 (6.250)	Acc@5 16.211 (20.508)	grad_norm 0.3129 (0.3009)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [28/100][40/48]	eta 0:00:05 lr 0.001016	time 0.5542 (0.6435)	loss 4.3856 (4.3902)	Acc@1 7.422 (6.541)	Acc@5 22.266 (20.732)	grad_norm 0.2864 (0.3064)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 28 training takes 0:00:30
+[2026-01-15 17:53:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.902 (1.902)	Loss 3.6191 (3.6191)	Acc@1 17.969 (17.969)	Acc@5 45.117 (45.117)	Mem 27934MB
+[2026-01-15 17:53:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:53:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 19.180 Acc@5 46.290
+[2026-01-15 17:53:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 19.2%
+[2026-01-15 17:53:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 19.18%
+[2026-01-15 17:53:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [29/100][0/48]	eta 0:02:34 lr 0.001014	time 3.2175 (3.2175)	loss 4.1925 (4.1925)	Acc@1 10.547 (10.547)	Acc@5 31.836 (31.836)	grad_norm 0.3698 (0.3698)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:53:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [29/100][20/48]	eta 0:00:19 lr 0.001007	time 0.5558 (0.6846)	loss 4.4595 (4.3506)	Acc@1 5.859 (7.580)	Acc@5 17.188 (22.963)	grad_norm 0.2927 (0.3267)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:54:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [29/100][40/48]	eta 0:00:04 lr 0.001000	time 0.5538 (0.6222)	loss 4.3742 (4.3381)	Acc@1 5.664 (7.684)	Acc@5 18.164 (23.495)	grad_norm 0.2768 (0.3117)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:54:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 29 training takes 0:00:29
+[2026-01-15 17:54:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.048 (2.048)	Loss 3.5039 (3.5039)	Acc@1 20.703 (20.703)	Acc@5 49.219 (49.219)	Mem 27934MB
+[2026-01-15 17:54:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:54:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 20.400 Acc@5 47.610
+[2026-01-15 17:54:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 20.4%
+[2026-01-15 17:54:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 20.40%
+[2026-01-15 17:54:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [30/100][0/48]	eta 0:03:49 lr 0.000998	time 4.7800 (4.7800)	loss 4.2497 (4.2497)	Acc@1 10.352 (10.352)	Acc@5 28.516 (28.516)	grad_norm 0.4098 (0.4098)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:54:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [30/100][20/48]	eta 0:00:21 lr 0.000991	time 0.5564 (0.7578)	loss 4.3453 (4.3237)	Acc@1 5.859 (8.064)	Acc@5 25.000 (24.033)	grad_norm 0.2608 (0.3037)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:54:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [30/100][40/48]	eta 0:00:05 lr 0.000984	time 0.5570 (0.6600)	loss 4.3068 (4.2993)	Acc@1 11.719 (8.513)	Acc@5 28.125 (24.876)	grad_norm 0.2762 (0.3179)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:54:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 30 training takes 0:00:31
+[2026-01-15 17:54:49 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_30.pth saving......
+[2026-01-15 17:54:50 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_30.pth saved !!!
+[2026-01-15 17:54:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.858 (1.858)	Loss 3.3828 (3.3828)	Acc@1 22.070 (22.070)	Acc@5 49.805 (49.805)	Mem 27934MB
+[2026-01-15 17:54:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:54:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 23.170 Acc@5 50.880
+[2026-01-15 17:54:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 23.2%
+[2026-01-15 17:54:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 23.17%
+[2026-01-15 17:54:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [31/100][0/48]	eta 0:03:20 lr 0.000982	time 4.1759 (4.1759)	loss 4.3534 (4.3534)	Acc@1 9.570 (9.570)	Acc@5 24.805 (24.805)	grad_norm 0.2658 (0.2658)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [31/100][20/48]	eta 0:00:20 lr 0.000975	time 0.5574 (0.7284)	loss 4.2701 (4.2952)	Acc@1 9.570 (8.603)	Acc@5 27.148 (25.725)	grad_norm 0.2658 (0.3107)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [31/100][40/48]	eta 0:00:05 lr 0.000968	time 0.5557 (0.6449)	loss 4.2804 (4.2985)	Acc@1 9.766 (8.837)	Acc@5 29.297 (25.981)	grad_norm 0.3729 (0.3131)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 31 training takes 0:00:30
+[2026-01-15 17:55:26 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.637 (1.637)	Loss 3.4082 (3.4082)	Acc@1 20.703 (20.703)	Acc@5 47.852 (47.852)	Mem 27934MB
+[2026-01-15 17:55:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:55:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 20.720 Acc@5 49.090
+[2026-01-15 17:55:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 20.7%
+[2026-01-15 17:55:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 23.17%
+[2026-01-15 17:55:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [32/100][0/48]	eta 0:02:42 lr 0.000965	time 3.3804 (3.3804)	loss 4.3361 (4.3361)	Acc@1 9.961 (9.961)	Acc@5 23.633 (23.633)	grad_norm 0.2254 (0.2254)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [32/100][20/48]	eta 0:00:19 lr 0.000958	time 0.5578 (0.6932)	loss 4.3631 (4.2590)	Acc@1 6.055 (9.040)	Acc@5 22.266 (26.907)	grad_norm 0.2961 (0.2942)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [32/100][40/48]	eta 0:00:05 lr 0.000951	time 0.5603 (0.6269)	loss 4.0223 (4.2254)	Acc@1 11.914 (10.137)	Acc@5 33.594 (28.430)	grad_norm 0.3005 (0.3169)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:55:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 32 training takes 0:00:29
+[2026-01-15 17:56:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.715 (2.715)	Loss 3.3281 (3.3281)	Acc@1 22.461 (22.461)	Acc@5 53.516 (53.516)	Mem 27934MB
+[2026-01-15 17:56:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:56:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 22.890 Acc@5 52.670
+[2026-01-15 17:56:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 22.9%
+[2026-01-15 17:56:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 23.17%
+[2026-01-15 17:56:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [33/100][0/48]	eta 0:03:08 lr 0.000949	time 3.9249 (3.9249)	loss 4.2187 (4.2187)	Acc@1 11.523 (11.523)	Acc@5 30.664 (30.664)	grad_norm 0.3281 (0.3281)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:56:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [33/100][20/48]	eta 0:00:20 lr 0.000942	time 0.5518 (0.7166)	loss 4.4236 (4.3243)	Acc@1 5.469 (9.115)	Acc@5 17.969 (25.688)	grad_norm 0.2306 (0.3047)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:56:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [33/100][40/48]	eta 0:00:05 lr 0.000934	time 0.5585 (0.6385)	loss 4.0194 (4.2711)	Acc@1 13.086 (10.166)	Acc@5 31.250 (27.530)	grad_norm 0.4515 (0.3136)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:56:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 33 training takes 0:00:30
+[2026-01-15 17:56:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.301 (2.301)	Loss 3.2988 (3.2988)	Acc@1 25.000 (25.000)	Acc@5 53.320 (53.320)	Mem 27934MB
+[2026-01-15 17:56:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:56:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 24.600 Acc@5 53.720
+[2026-01-15 17:56:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 24.6%
+[2026-01-15 17:56:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 24.60%
+[2026-01-15 17:56:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [34/100][0/48]	eta 0:02:34 lr 0.000932	time 3.2252 (3.2252)	loss 4.4085 (4.4085)	Acc@1 6.836 (6.836)	Acc@5 19.336 (19.336)	grad_norm 0.2648 (0.2648)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:56:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [34/100][20/48]	eta 0:00:19 lr 0.000924	time 0.5575 (0.6850)	loss 4.2930 (4.1693)	Acc@1 10.547 (11.458)	Acc@5 26.562 (30.273)	grad_norm 0.3166 (0.3706)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:57:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [34/100][40/48]	eta 0:00:04 lr 0.000917	time 0.5571 (0.6219)	loss 4.3810 (4.1738)	Acc@1 6.836 (11.442)	Acc@5 20.312 (30.474)	grad_norm 0.3447 (0.3670)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:57:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 34 training takes 0:00:29
+[2026-01-15 17:57:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.371 (2.371)	Loss 3.1562 (3.1562)	Acc@1 24.219 (24.219)	Acc@5 58.789 (58.789)	Mem 27934MB
+[2026-01-15 17:57:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:57:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 26.300 Acc@5 57.240
+[2026-01-15 17:57:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 26.3%
+[2026-01-15 17:57:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 26.30%
+[2026-01-15 17:57:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [35/100][0/48]	eta 0:02:39 lr 0.000914	time 3.3331 (3.3331)	loss 4.3942 (4.3942)	Acc@1 7.227 (7.227)	Acc@5 20.312 (20.312)	grad_norm 0.2393 (0.2393)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:57:26 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [35/100][20/48]	eta 0:00:19 lr 0.000907	time 0.5590 (0.6904)	loss 4.3034 (4.2716)	Acc@1 10.352 (10.147)	Acc@5 27.539 (27.269)	grad_norm 0.3269 (0.3212)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:57:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [35/100][40/48]	eta 0:00:05 lr 0.000900	time 0.5593 (0.6257)	loss 3.9631 (4.2166)	Acc@1 13.867 (11.014)	Acc@5 33.594 (29.192)	grad_norm 0.4204 (0.3474)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:57:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 35 training takes 0:00:29
+[2026-01-15 17:57:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.529 (2.529)	Loss 3.1660 (3.1660)	Acc@1 24.414 (24.414)	Acc@5 56.641 (56.641)	Mem 27934MB
+[2026-01-15 17:57:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:57:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 27.560 Acc@5 57.880
+[2026-01-15 17:57:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 27.6%
+[2026-01-15 17:57:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 27.56%
+[2026-01-15 17:57:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [36/100][0/48]	eta 0:03:34 lr 0.000897	time 4.4783 (4.4783)	loss 4.4044 (4.4044)	Acc@1 4.688 (4.688)	Acc@5 18.750 (18.750)	grad_norm 0.2952 (0.2952)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [36/100][20/48]	eta 0:00:20 lr 0.000889	time 0.5546 (0.7429)	loss 3.9940 (4.2072)	Acc@1 14.648 (10.510)	Acc@5 35.938 (29.381)	grad_norm 0.4638 (0.3448)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [36/100][40/48]	eta 0:00:05 lr 0.000882	time 0.5555 (0.6515)	loss 4.3737 (4.1935)	Acc@1 6.250 (10.947)	Acc@5 23.242 (29.964)	grad_norm 0.2879 (0.3600)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 36 training takes 0:00:30
+[2026-01-15 17:58:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.220 (2.220)	Loss 3.0625 (3.0625)	Acc@1 29.883 (29.883)	Acc@5 60.938 (60.938)	Mem 27934MB
+[2026-01-15 17:58:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:58:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 28.990 Acc@5 60.890
+[2026-01-15 17:58:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 29.0%
+[2026-01-15 17:58:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 28.99%
+[2026-01-15 17:58:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [37/100][0/48]	eta 0:03:00 lr 0.000879	time 3.7567 (3.7567)	loss 4.3334 (4.3334)	Acc@1 10.352 (10.352)	Acc@5 28.711 (28.711)	grad_norm 0.4059 (0.4059)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [37/100][20/48]	eta 0:00:19 lr 0.000871	time 0.5587 (0.7095)	loss 4.3145 (4.2165)	Acc@1 8.398 (11.133)	Acc@5 25.391 (29.548)	grad_norm 0.4178 (0.4422)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [37/100][40/48]	eta 0:00:05 lr 0.000864	time 0.5560 (0.6347)	loss 4.3147 (4.1841)	Acc@1 10.156 (11.890)	Acc@5 28.906 (31.136)	grad_norm 0.4277 (0.4061)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:58:51 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 37 training takes 0:00:30
+[2026-01-15 17:58:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.337 (2.337)	Loss 3.0332 (3.0332)	Acc@1 28.711 (28.711)	Acc@5 60.156 (60.156)	Mem 27934MB
+[2026-01-15 17:58:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:58:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 29.030 Acc@5 59.870
+[2026-01-15 17:58:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 29.0%
+[2026-01-15 17:58:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 29.03%
+[2026-01-15 17:58:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [38/100][0/48]	eta 0:02:52 lr 0.000861	time 3.6035 (3.6035)	loss 4.3675 (4.3675)	Acc@1 6.445 (6.445)	Acc@5 21.484 (21.484)	grad_norm 0.3318 (0.3318)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [38/100][20/48]	eta 0:00:19 lr 0.000853	time 0.5585 (0.7016)	loss 3.8329 (4.1708)	Acc@1 17.578 (12.528)	Acc@5 41.602 (31.957)	grad_norm 0.3842 (0.3833)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [38/100][40/48]	eta 0:00:05 lr 0.000845	time 0.5579 (0.6308)	loss 4.3094 (4.1378)	Acc@1 10.156 (12.943)	Acc@5 29.492 (32.898)	grad_norm 0.3628 (0.3999)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 38 training takes 0:00:29
+[2026-01-15 17:59:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.533 (2.533)	Loss 2.9043 (2.9043)	Acc@1 30.078 (30.078)	Acc@5 63.672 (63.672)	Mem 27934MB
+[2026-01-15 17:59:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 17:59:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 32.420 Acc@5 62.610
+[2026-01-15 17:59:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 32.4%
+[2026-01-15 17:59:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 32.42%
+[2026-01-15 17:59:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [39/100][0/48]	eta 0:02:38 lr 0.000842	time 3.3120 (3.3120)	loss 4.2643 (4.2643)	Acc@1 11.914 (11.914)	Acc@5 29.297 (29.297)	grad_norm 0.3819 (0.3819)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [39/100][20/48]	eta 0:00:19 lr 0.000835	time 0.5544 (0.6902)	loss 4.3194 (4.1314)	Acc@1 10.938 (14.081)	Acc@5 24.609 (33.882)	grad_norm 0.3403 (0.4188)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [39/100][40/48]	eta 0:00:04 lr 0.000827	time 0.5545 (0.6240)	loss 3.8704 (4.1310)	Acc@1 18.945 (13.843)	Acc@5 44.141 (33.770)	grad_norm 0.3848 (0.4077)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 17:59:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 39 training takes 0:00:29
+[2026-01-15 18:00:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.913 (1.913)	Loss 2.8789 (2.8789)	Acc@1 30.859 (30.859)	Acc@5 64.258 (64.258)	Mem 27934MB
+[2026-01-15 18:00:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:00:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 32.640 Acc@5 63.290
+[2026-01-15 18:00:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 32.6%
+[2026-01-15 18:00:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 32.64%
+[2026-01-15 18:00:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [40/100][0/48]	eta 0:02:45 lr 0.000824	time 3.4403 (3.4403)	loss 3.9599 (3.9599)	Acc@1 16.406 (16.406)	Acc@5 40.430 (40.430)	grad_norm 0.4361 (0.4361)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:00:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [40/100][20/48]	eta 0:00:19 lr 0.000816	time 0.5562 (0.6941)	loss 4.1877 (4.0393)	Acc@1 16.211 (15.858)	Acc@5 36.328 (37.379)	grad_norm 0.4995 (0.4420)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:00:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [40/100][40/48]	eta 0:00:05 lr 0.000808	time 0.5565 (0.6269)	loss 4.3176 (4.0557)	Acc@1 10.742 (15.301)	Acc@5 26.953 (36.323)	grad_norm 0.4072 (0.4601)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:00:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 40 training takes 0:00:29
+[2026-01-15 18:00:33 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_40.pth saving......
+[2026-01-15 18:00:33 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_40.pth saved !!!
+[2026-01-15 18:00:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.981 (1.981)	Loss 2.8008 (2.8008)	Acc@1 31.445 (31.445)	Acc@5 64.648 (64.648)	Mem 27934MB
+[2026-01-15 18:00:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:00:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 32.930 Acc@5 63.950
+[2026-01-15 18:00:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 32.9%
+[2026-01-15 18:00:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 32.93%
+[2026-01-15 18:00:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [41/100][0/48]	eta 0:02:48 lr 0.000805	time 3.5195 (3.5195)	loss 3.9301 (3.9301)	Acc@1 15.820 (15.820)	Acc@5 40.234 (40.234)	grad_norm 0.4575 (0.4575)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:00:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [41/100][20/48]	eta 0:00:19 lr 0.000797	time 0.5550 (0.6978)	loss 4.1700 (4.0450)	Acc@1 13.672 (14.872)	Acc@5 34.961 (35.761)	grad_norm 0.4107 (0.4158)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:01:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [41/100][40/48]	eta 0:00:05 lr 0.000789	time 0.5552 (0.6292)	loss 4.0781 (4.0885)	Acc@1 15.820 (14.272)	Acc@5 41.602 (35.090)	grad_norm 0.4173 (0.4231)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:01:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 41 training takes 0:00:29
+[2026-01-15 18:01:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.152 (2.152)	Loss 2.7109 (2.7109)	Acc@1 33.398 (33.398)	Acc@5 68.750 (68.750)	Mem 27934MB
+[2026-01-15 18:01:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:01:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 36.440 Acc@5 67.860
+[2026-01-15 18:01:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 36.4%
+[2026-01-15 18:01:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 36.44%
+[2026-01-15 18:01:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [42/100][0/48]	eta 0:02:59 lr 0.000786	time 3.7311 (3.7311)	loss 4.2351 (4.2351)	Acc@1 12.500 (12.500)	Acc@5 30.078 (30.078)	grad_norm 0.3629 (0.3629)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:01:26 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [42/100][20/48]	eta 0:00:19 lr 0.000778	time 0.5584 (0.7065)	loss 4.3043 (4.1658)	Acc@1 11.719 (12.472)	Acc@5 30.273 (31.399)	grad_norm 0.3859 (0.4469)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:01:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [42/100][40/48]	eta 0:00:05 lr 0.000770	time 0.5551 (0.6336)	loss 3.7516 (4.1023)	Acc@1 21.289 (14.163)	Acc@5 48.438 (34.642)	grad_norm 0.5006 (0.4359)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:01:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 42 training takes 0:00:30
+[2026-01-15 18:01:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.166 (2.166)	Loss 2.6738 (2.6738)	Acc@1 36.523 (36.523)	Acc@5 67.578 (67.578)	Mem 27934MB
+[2026-01-15 18:01:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:01:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 36.370 Acc@5 67.350
+[2026-01-15 18:01:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 36.4%
+[2026-01-15 18:01:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 36.44%
+[2026-01-15 18:01:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [43/100][0/48]	eta 0:02:24 lr 0.000767	time 3.0063 (3.0063)	loss 4.2590 (4.2590)	Acc@1 13.867 (13.867)	Acc@5 32.422 (32.422)	grad_norm 0.4402 (0.4402)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:00 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [43/100][20/48]	eta 0:00:18 lr 0.000759	time 0.5590 (0.6739)	loss 4.1993 (4.0595)	Acc@1 15.430 (16.090)	Acc@5 33.203 (37.919)	grad_norm 0.3054 (0.4264)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [43/100][40/48]	eta 0:00:04 lr 0.000751	time 0.5549 (0.6166)	loss 4.2747 (4.0667)	Acc@1 9.180 (15.215)	Acc@5 25.195 (36.457)	grad_norm 0.3133 (0.4111)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 43 training takes 0:00:29
+[2026-01-15 18:02:17 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.965 (1.965)	Loss 2.6445 (2.6445)	Acc@1 37.500 (37.500)	Acc@5 68.164 (68.164)	Mem 27934MB
+[2026-01-15 18:02:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:02:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 38.000 Acc@5 68.350
+[2026-01-15 18:02:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 38.0%
+[2026-01-15 18:02:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 38.00%
+[2026-01-15 18:02:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [44/100][0/48]	eta 0:02:59 lr 0.000748	time 3.7374 (3.7374)	loss 3.7930 (3.7930)	Acc@1 20.312 (20.312)	Acc@5 44.727 (44.727)	grad_norm 0.4349 (0.4349)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [44/100][20/48]	eta 0:00:19 lr 0.000740	time 0.5549 (0.7078)	loss 4.2665 (4.0655)	Acc@1 11.133 (16.006)	Acc@5 29.102 (37.426)	grad_norm 0.3268 (0.3975)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [44/100][40/48]	eta 0:00:05 lr 0.000732	time 0.5519 (0.6345)	loss 4.0630 (4.0744)	Acc@1 14.258 (15.177)	Acc@5 35.938 (35.909)	grad_norm 0.4664 (0.3897)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:02:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 44 training takes 0:00:30
+[2026-01-15 18:02:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.144 (2.144)	Loss 2.6309 (2.6309)	Acc@1 35.156 (35.156)	Acc@5 68.555 (68.555)	Mem 27934MB
+[2026-01-15 18:02:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:02:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 37.450 Acc@5 69.230
+[2026-01-15 18:02:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 37.5%
+[2026-01-15 18:02:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 38.00%
+[2026-01-15 18:02:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [45/100][0/48]	eta 0:02:57 lr 0.000728	time 3.6947 (3.6947)	loss 4.1353 (4.1353)	Acc@1 14.062 (14.062)	Acc@5 34.180 (34.180)	grad_norm 0.3445 (0.3445)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [45/100][20/48]	eta 0:00:19 lr 0.000720	time 0.5560 (0.7059)	loss 3.7475 (4.0127)	Acc@1 21.484 (16.583)	Acc@5 46.484 (38.960)	grad_norm 0.4650 (0.4407)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [45/100][40/48]	eta 0:00:05 lr 0.000712	time 0.5583 (0.6328)	loss 4.2832 (4.0215)	Acc@1 9.766 (16.001)	Acc@5 26.953 (37.976)	grad_norm 0.3370 (0.4331)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 45 training takes 0:00:30
+[2026-01-15 18:03:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.906 (1.906)	Loss 2.5508 (2.5508)	Acc@1 36.719 (36.719)	Acc@5 70.508 (70.508)	Mem 27934MB
+[2026-01-15 18:03:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:03:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 39.750 Acc@5 71.520
+[2026-01-15 18:03:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 39.8%
+[2026-01-15 18:03:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 39.75%
+[2026-01-15 18:03:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [46/100][0/48]	eta 0:02:31 lr 0.000709	time 3.1655 (3.1655)	loss 4.0356 (4.0356)	Acc@1 19.727 (19.727)	Acc@5 42.188 (42.188)	grad_norm 0.3958 (0.3958)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [46/100][20/48]	eta 0:00:19 lr 0.000701	time 0.5585 (0.6819)	loss 3.9310 (3.9423)	Acc@1 20.117 (17.541)	Acc@5 45.508 (41.099)	grad_norm 0.3857 (0.4405)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [46/100][40/48]	eta 0:00:04 lr 0.000693	time 0.5552 (0.6207)	loss 3.7476 (3.9220)	Acc@1 19.141 (18.016)	Acc@5 46.484 (41.649)	grad_norm 0.5707 (0.4596)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:03:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 46 training takes 0:00:29
+[2026-01-15 18:03:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.898 (1.898)	Loss 2.4570 (2.4570)	Acc@1 40.625 (40.625)	Acc@5 71.875 (71.875)	Mem 27934MB
+[2026-01-15 18:04:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:04:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 41.720 Acc@5 72.450
+[2026-01-15 18:04:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 41.7%
+[2026-01-15 18:04:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 41.72%
+[2026-01-15 18:04:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [47/100][0/48]	eta 0:02:38 lr 0.000690	time 3.2942 (3.2942)	loss 4.2781 (4.2781)	Acc@1 11.719 (11.719)	Acc@5 28.906 (28.906)	grad_norm 0.4803 (0.4803)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:04:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [47/100][20/48]	eta 0:00:19 lr 0.000681	time 0.5542 (0.6865)	loss 4.1491 (4.0148)	Acc@1 15.039 (17.215)	Acc@5 36.523 (40.002)	grad_norm 0.4116 (0.4131)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:04:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [47/100][40/48]	eta 0:00:04 lr 0.000673	time 0.5568 (0.6231)	loss 4.2190 (3.9680)	Acc@1 12.500 (17.645)	Acc@5 30.273 (40.492)	grad_norm 0.4340 (0.4294)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:04:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 47 training takes 0:00:29
+[2026-01-15 18:04:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.663 (1.663)	Loss 2.4531 (2.4531)	Acc@1 40.039 (40.039)	Acc@5 71.484 (71.484)	Mem 27934MB
+[2026-01-15 18:04:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:04:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 42.080 Acc@5 72.410
+[2026-01-15 18:04:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 42.1%
+[2026-01-15 18:04:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 42.08%
+[2026-01-15 18:04:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [48/100][0/48]	eta 0:02:49 lr 0.000670	time 3.5394 (3.5394)	loss 3.5770 (3.5770)	Acc@1 24.805 (24.805)	Acc@5 54.688 (54.688)	grad_norm 0.5167 (0.5167)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:04:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [48/100][20/48]	eta 0:00:19 lr 0.000662	time 0.5572 (0.6982)	loss 4.1684 (4.0213)	Acc@1 12.305 (16.778)	Acc@5 31.055 (38.151)	grad_norm 0.3519 (0.4270)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:05:00 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [48/100][40/48]	eta 0:00:05 lr 0.000654	time 0.5536 (0.6291)	loss 3.9262 (3.9873)	Acc@1 18.555 (17.292)	Acc@5 43.750 (39.215)	grad_norm 0.3782 (0.4692)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:05:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 48 training takes 0:00:29
+[2026-01-15 18:05:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.482 (2.482)	Loss 2.5234 (2.5234)	Acc@1 38.672 (38.672)	Acc@5 70.508 (70.508)	Mem 27934MB
+[2026-01-15 18:05:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:05:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 41.120 Acc@5 71.600
+[2026-01-15 18:05:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 41.1%
+[2026-01-15 18:05:08 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 42.08%
+[2026-01-15 18:05:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [49/100][0/48]	eta 0:02:49 lr 0.000650	time 3.5209 (3.5209)	loss 4.2143 (4.2143)	Acc@1 16.016 (16.016)	Acc@5 35.742 (35.742)	grad_norm 0.6523 (0.6523)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:05:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [49/100][20/48]	eta 0:00:19 lr 0.000642	time 0.5515 (0.6969)	loss 4.2535 (3.8971)	Acc@1 12.695 (20.043)	Acc@5 34.180 (43.890)	grad_norm 0.2972 (0.4805)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:05:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [49/100][40/48]	eta 0:00:05 lr 0.000634	time 0.5565 (0.6282)	loss 4.1964 (3.8902)	Acc@1 15.039 (19.817)	Acc@5 35.156 (43.183)	grad_norm 0.4178 (0.4565)	loss_scale 4096.0000 (4096.0000)	mem 27934MB
+[2026-01-15 18:05:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 49 training takes 0:00:29
+[2026-01-15 18:05:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.811 (1.811)	Loss 2.3652 (2.3652)	Acc@1 41.406 (41.406)	Acc@5 71.875 (71.875)	Mem 27934MB
+[2026-01-15 18:05:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:05:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 43.970 Acc@5 74.480
+[2026-01-15 18:05:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 44.0%
+[2026-01-15 18:05:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 43.97%
+[2026-01-15 18:05:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [50/100][0/48]	eta 0:02:31 lr 0.000631	time 3.1571 (3.1571)	loss 4.3415 (4.3415)	Acc@1 5.859 (5.859)	Acc@5 19.922 (19.922)	grad_norm 0.4692 (0.4692)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:05:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [50/100][20/48]	eta 0:00:19 lr 0.000623	time 0.5522 (0.6812)	loss 4.0540 (3.9597)	Acc@1 19.141 (17.439)	Acc@5 41.016 (39.025)	grad_norm 0.3827 (0.4469)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:06:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [50/100][40/48]	eta 0:00:04 lr 0.000614	time 0.5548 (0.6202)	loss 3.9525 (3.9492)	Acc@1 22.070 (18.145)	Acc@5 46.094 (40.320)	grad_norm 0.4412 (0.4496)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:06:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 50 training takes 0:00:29
+[2026-01-15 18:06:12 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_50.pth saving......
+[2026-01-15 18:06:12 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_50.pth saved !!!
+[2026-01-15 18:06:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.336 (2.336)	Loss 2.3711 (2.3711)	Acc@1 43.359 (43.359)	Acc@5 74.805 (74.805)	Mem 27934MB
+[2026-01-15 18:06:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:06:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 45.660 Acc@5 75.370
+[2026-01-15 18:06:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 45.7%
+[2026-01-15 18:06:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 45.66%
+[2026-01-15 18:06:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [51/100][0/48]	eta 0:02:59 lr 0.000611	time 3.7424 (3.7424)	loss 4.2458 (4.2458)	Acc@1 13.281 (13.281)	Acc@5 31.836 (31.836)	grad_norm 0.4911 (0.4911)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:06:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [51/100][20/48]	eta 0:00:19 lr 0.000603	time 0.5557 (0.7080)	loss 4.0327 (3.9045)	Acc@1 20.508 (18.983)	Acc@5 44.922 (42.178)	grad_norm 0.6703 (0.4896)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:06:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [51/100][40/48]	eta 0:00:05 lr 0.000595	time 0.5576 (0.6336)	loss 3.7633 (3.9111)	Acc@1 29.297 (19.550)	Acc@5 50.781 (42.816)	grad_norm 0.4589 (0.4736)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:06:46 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 51 training takes 0:00:30
+[2026-01-15 18:06:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.920 (1.920)	Loss 2.2305 (2.2305)	Acc@1 46.094 (46.094)	Acc@5 74.805 (74.805)	Mem 27934MB
+[2026-01-15 18:06:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:06:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 46.600 Acc@5 76.340
+[2026-01-15 18:06:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 46.6%
+[2026-01-15 18:06:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 46.60%
+[2026-01-15 18:06:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [52/100][0/48]	eta 0:03:00 lr 0.000592	time 3.7502 (3.7502)	loss 3.6919 (3.6919)	Acc@1 26.562 (26.562)	Acc@5 50.781 (50.781)	grad_norm 0.3970 (0.3970)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [52/100][20/48]	eta 0:00:19 lr 0.000583	time 0.5580 (0.7084)	loss 4.1481 (3.8745)	Acc@1 16.406 (20.740)	Acc@5 35.742 (43.508)	grad_norm 0.4010 (0.4569)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:16 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [52/100][40/48]	eta 0:00:05 lr 0.000575	time 0.5534 (0.6338)	loss 4.1675 (3.9250)	Acc@1 14.453 (19.398)	Acc@5 37.109 (42.307)	grad_norm 0.3897 (0.4572)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 52 training takes 0:00:30
+[2026-01-15 18:07:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.051 (2.051)	Loss 2.2109 (2.2109)	Acc@1 48.438 (48.438)	Acc@5 75.391 (75.391)	Mem 27934MB
+[2026-01-15 18:07:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:07:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 47.770 Acc@5 77.130
+[2026-01-15 18:07:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 47.8%
+[2026-01-15 18:07:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 47.77%
+[2026-01-15 18:07:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [53/100][0/48]	eta 0:02:32 lr 0.000572	time 3.1791 (3.1791)	loss 3.9962 (3.9962)	Acc@1 19.531 (19.531)	Acc@5 42.383 (42.383)	grad_norm 0.4079 (0.4079)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [53/100][20/48]	eta 0:00:19 lr 0.000564	time 0.5590 (0.6819)	loss 4.0776 (4.0428)	Acc@1 17.383 (17.997)	Acc@5 37.500 (39.732)	grad_norm 0.4380 (0.4302)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [53/100][40/48]	eta 0:00:04 lr 0.000556	time 0.5588 (0.6212)	loss 3.5683 (3.9843)	Acc@1 27.344 (18.921)	Acc@5 54.297 (41.430)	grad_norm 0.5220 (0.4583)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:07:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 53 training takes 0:00:29
+[2026-01-15 18:07:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.287 (2.287)	Loss 2.1895 (2.1895)	Acc@1 45.898 (45.898)	Acc@5 77.344 (77.344)	Mem 27934MB
+[2026-01-15 18:07:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:07:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 47.340 Acc@5 77.330
+[2026-01-15 18:07:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 47.3%
+[2026-01-15 18:07:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 47.77%
+[2026-01-15 18:08:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [54/100][0/48]	eta 0:02:50 lr 0.000552	time 3.5617 (3.5617)	loss 4.0489 (4.0489)	Acc@1 20.117 (20.117)	Acc@5 41.992 (41.992)	grad_norm 0.4138 (0.4138)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:08:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [54/100][20/48]	eta 0:00:19 lr 0.000544	time 0.5521 (0.6988)	loss 3.5310 (3.8051)	Acc@1 27.344 (22.638)	Acc@5 54.883 (46.763)	grad_norm 0.4697 (0.4715)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:08:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [54/100][40/48]	eta 0:00:05 lr 0.000536	time 0.5546 (0.6297)	loss 4.1766 (3.8673)	Acc@1 8.984 (21.132)	Acc@5 29.297 (44.679)	grad_norm 0.5078 (0.4604)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:08:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 54 training takes 0:00:29
+[2026-01-15 18:08:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.972 (1.972)	Loss 2.2344 (2.2344)	Acc@1 44.727 (44.727)	Acc@5 75.000 (75.000)	Mem 27934MB
+[2026-01-15 18:08:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:08:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 47.180 Acc@5 77.400
+[2026-01-15 18:08:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 47.2%
+[2026-01-15 18:08:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 47.77%
+[2026-01-15 18:08:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [55/100][0/48]	eta 0:02:22 lr 0.000533	time 2.9595 (2.9595)	loss 4.1986 (4.1986)	Acc@1 13.086 (13.086)	Acc@5 31.641 (31.641)	grad_norm 0.4671 (0.4671)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:08:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [55/100][20/48]	eta 0:00:18 lr 0.000525	time 0.5585 (0.6728)	loss 3.8171 (3.8953)	Acc@1 22.266 (19.801)	Acc@5 48.633 (41.583)	grad_norm 0.4346 (0.4544)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:08:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [55/100][40/48]	eta 0:00:04 lr 0.000517	time 0.5650 (0.6172)	loss 3.9398 (3.9224)	Acc@1 21.289 (19.284)	Acc@5 44.727 (41.316)	grad_norm 0.4444 (0.4642)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:09:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 55 training takes 0:00:29
+[2026-01-15 18:09:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.488 (2.488)	Loss 2.1367 (2.1367)	Acc@1 51.172 (51.172)	Acc@5 77.930 (77.930)	Mem 27934MB
+[2026-01-15 18:09:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:09:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 48.770 Acc@5 78.520
+[2026-01-15 18:09:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 48.8%
+[2026-01-15 18:09:05 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 48.77%
+[2026-01-15 18:09:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [56/100][0/48]	eta 0:03:04 lr 0.000514	time 3.8408 (3.8408)	loss 4.0968 (4.0968)	Acc@1 14.453 (14.453)	Acc@5 35.156 (35.156)	grad_norm 0.3919 (0.3919)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:09:20 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [56/100][20/48]	eta 0:00:19 lr 0.000506	time 0.5570 (0.7132)	loss 3.8079 (3.9610)	Acc@1 23.633 (19.531)	Acc@5 49.609 (42.057)	grad_norm 0.4256 (0.4205)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:09:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [56/100][40/48]	eta 0:00:05 lr 0.000498	time 0.5559 (0.6365)	loss 4.0254 (3.9332)	Acc@1 21.289 (19.865)	Acc@5 42.773 (43.064)	grad_norm 0.3481 (0.4196)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:09:35 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 56 training takes 0:00:30
+[2026-01-15 18:09:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.371 (2.371)	Loss 2.1289 (2.1289)	Acc@1 48.047 (48.047)	Acc@5 76.562 (76.562)	Mem 27934MB
+[2026-01-15 18:09:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:09:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 49.330 Acc@5 79.060
+[2026-01-15 18:09:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 49.3%
+[2026-01-15 18:09:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 49.33%
+[2026-01-15 18:09:43 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [57/100][0/48]	eta 0:03:10 lr 0.000495	time 3.9594 (3.9594)	loss 4.1541 (4.1541)	Acc@1 14.258 (14.258)	Acc@5 33.008 (33.008)	grad_norm 0.5247 (0.5247)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:09:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [57/100][20/48]	eta 0:00:20 lr 0.000487	time 0.5581 (0.7177)	loss 3.8739 (3.7529)	Acc@1 22.461 (23.242)	Acc@5 51.367 (48.158)	grad_norm 0.3904 (0.4951)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:10:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [57/100][40/48]	eta 0:00:05 lr 0.000479	time 0.5587 (0.6388)	loss 4.1100 (3.8090)	Acc@1 15.234 (22.423)	Acc@5 35.547 (46.503)	grad_norm 0.4555 (0.4808)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:10:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 57 training takes 0:00:30
+[2026-01-15 18:10:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.168 (2.168)	Loss 2.0938 (2.0938)	Acc@1 49.414 (49.414)	Acc@5 77.734 (77.734)	Mem 27934MB
+[2026-01-15 18:10:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:10:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 50.390 Acc@5 79.410
+[2026-01-15 18:10:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 50.4%
+[2026-01-15 18:10:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 50.39%
+[2026-01-15 18:10:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [58/100][0/48]	eta 0:03:30 lr 0.000475	time 4.3958 (4.3958)	loss 3.4818 (3.4818)	Acc@1 35.938 (35.938)	Acc@5 58.594 (58.594)	grad_norm 0.5271 (0.5271)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:10:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [58/100][20/48]	eta 0:00:20 lr 0.000468	time 0.5557 (0.7392)	loss 3.9819 (3.7426)	Acc@1 21.484 (23.958)	Acc@5 43.750 (48.289)	grad_norm 0.4790 (0.5210)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:10:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [58/100][40/48]	eta 0:00:05 lr 0.000460	time 0.5566 (0.6498)	loss 4.1251 (3.7796)	Acc@1 18.164 (23.290)	Acc@5 37.109 (47.523)	grad_norm 0.4461 (0.4898)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:10:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 58 training takes 0:00:30
+[2026-01-15 18:10:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.168 (2.168)	Loss 2.0312 (2.0312)	Acc@1 49.609 (49.609)	Acc@5 80.469 (80.469)	Mem 27934MB
+[2026-01-15 18:10:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:10:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 51.230 Acc@5 80.530
+[2026-01-15 18:10:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 51.2%
+[2026-01-15 18:10:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 51.23%
+[2026-01-15 18:10:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [59/100][0/48]	eta 0:03:12 lr 0.000457	time 4.0142 (4.0142)	loss 3.9248 (3.9248)	Acc@1 22.656 (22.656)	Acc@5 46.289 (46.289)	grad_norm 0.4664 (0.4664)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [59/100][20/48]	eta 0:00:20 lr 0.000449	time 0.5585 (0.7217)	loss 3.9105 (3.7525)	Acc@1 23.633 (24.609)	Acc@5 46.875 (48.400)	grad_norm 0.4163 (0.4846)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [59/100][40/48]	eta 0:00:05 lr 0.000441	time 0.5539 (0.6411)	loss 4.1253 (3.6722)	Acc@1 15.430 (25.467)	Acc@5 32.422 (50.214)	grad_norm 0.4011 (0.4886)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 59 training takes 0:00:30
+[2026-01-15 18:11:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.652 (1.652)	Loss 2.0117 (2.0117)	Acc@1 49.023 (49.023)	Acc@5 79.883 (79.883)	Mem 27934MB
+[2026-01-15 18:11:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:11:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 52.250 Acc@5 80.700
+[2026-01-15 18:11:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 52.2%
+[2026-01-15 18:11:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 52.25%
+[2026-01-15 18:11:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [60/100][0/48]	eta 0:03:32 lr 0.000438	time 4.4220 (4.4220)	loss 4.0057 (4.0057)	Acc@1 19.531 (19.531)	Acc@5 42.383 (42.383)	grad_norm 0.3775 (0.3775)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [60/100][20/48]	eta 0:00:20 lr 0.000430	time 0.5561 (0.7404)	loss 3.4668 (3.7479)	Acc@1 31.641 (24.833)	Acc@5 58.203 (49.237)	grad_norm 0.5704 (0.4691)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:50 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [60/100][40/48]	eta 0:00:05 lr 0.000422	time 0.5581 (0.6514)	loss 3.5088 (3.7270)	Acc@1 30.078 (24.295)	Acc@5 55.859 (48.938)	grad_norm 0.5745 (0.4659)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:11:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 60 training takes 0:00:30
+[2026-01-15 18:11:54 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_60.pth saving......
+[2026-01-15 18:11:55 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_60.pth saved !!!
+[2026-01-15 18:11:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.409 (2.409)	Loss 2.0039 (2.0039)	Acc@1 51.953 (51.953)	Acc@5 78.125 (78.125)	Mem 27934MB
+[2026-01-15 18:11:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:11:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 53.070 Acc@5 81.630
+[2026-01-15 18:11:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 53.1%
+[2026-01-15 18:11:59 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 53.07%
+[2026-01-15 18:12:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [61/100][0/48]	eta 0:02:41 lr 0.000419	time 3.3708 (3.3708)	loss 4.1502 (4.1502)	Acc@1 11.523 (11.523)	Acc@5 30.859 (30.859)	grad_norm 0.3652 (0.3652)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:12:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [61/100][20/48]	eta 0:00:19 lr 0.000412	time 0.5559 (0.7032)	loss 3.2295 (3.7910)	Acc@1 33.789 (24.051)	Acc@5 61.719 (48.056)	grad_norm 0.5950 (0.4656)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:12:25 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [61/100][40/48]	eta 0:00:05 lr 0.000404	time 0.5574 (0.6315)	loss 3.9800 (3.7682)	Acc@1 22.070 (24.276)	Acc@5 44.141 (48.585)	grad_norm 0.3705 (0.4745)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:12:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 61 training takes 0:00:29
+[2026-01-15 18:12:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.858 (1.858)	Loss 2.0801 (2.0801)	Acc@1 49.023 (49.023)	Acc@5 78.125 (78.125)	Mem 27934MB
+[2026-01-15 18:12:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:12:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 52.450 Acc@5 80.310
+[2026-01-15 18:12:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 52.5%
+[2026-01-15 18:12:33 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 53.07%
+[2026-01-15 18:12:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [62/100][0/48]	eta 0:02:29 lr 0.000401	time 3.1230 (3.1230)	loss 4.0979 (4.0979)	Acc@1 17.383 (17.383)	Acc@5 36.523 (36.523)	grad_norm 0.4724 (0.4724)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:12:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [62/100][20/48]	eta 0:00:18 lr 0.000393	time 0.5573 (0.6785)	loss 4.0429 (3.7420)	Acc@1 21.680 (24.433)	Acc@5 42.969 (48.344)	grad_norm 0.5212 (0.4869)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:12:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [62/100][40/48]	eta 0:00:04 lr 0.000386	time 0.5561 (0.6195)	loss 3.5890 (3.7532)	Acc@1 27.344 (24.271)	Acc@5 52.539 (48.156)	grad_norm 0.4997 (0.4853)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:13:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 62 training takes 0:00:29
+[2026-01-15 18:13:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.970 (1.970)	Loss 1.9746 (1.9746)	Acc@1 52.734 (52.734)	Acc@5 80.664 (80.664)	Mem 27934MB
+[2026-01-15 18:13:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:13:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 54.020 Acc@5 81.330
+[2026-01-15 18:13:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 54.0%
+[2026-01-15 18:13:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 54.02%
+[2026-01-15 18:13:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [63/100][0/48]	eta 0:02:52 lr 0.000383	time 3.5859 (3.5859)	loss 3.1779 (3.1779)	Acc@1 34.766 (34.766)	Acc@5 61.328 (61.328)	grad_norm 0.5873 (0.5873)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:13:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [63/100][20/48]	eta 0:00:19 lr 0.000375	time 0.5583 (0.7011)	loss 4.0395 (3.7248)	Acc@1 19.336 (24.879)	Acc@5 41.797 (49.191)	grad_norm 0.4013 (0.4784)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:13:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [63/100][40/48]	eta 0:00:05 lr 0.000368	time 0.5540 (0.6302)	loss 3.5869 (3.7131)	Acc@1 31.055 (25.191)	Acc@5 57.227 (49.886)	grad_norm 0.6100 (0.4954)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:13:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 63 training takes 0:00:29
+[2026-01-15 18:13:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.641 (2.641)	Loss 1.9365 (1.9365)	Acc@1 52.539 (52.539)	Acc@5 80.664 (80.664)	Mem 27934MB
+[2026-01-15 18:13:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:13:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 54.450 Acc@5 82.270
+[2026-01-15 18:13:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 54.5%
+[2026-01-15 18:13:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 54.45%
+[2026-01-15 18:13:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [64/100][0/48]	eta 0:02:59 lr 0.000365	time 3.7353 (3.7353)	loss 3.7836 (3.7836)	Acc@1 29.297 (29.297)	Acc@5 52.539 (52.539)	grad_norm 0.4760 (0.4760)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:13:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [64/100][20/48]	eta 0:00:19 lr 0.000357	time 0.5546 (0.7071)	loss 4.0277 (3.6759)	Acc@1 12.109 (24.851)	Acc@5 31.055 (48.875)	grad_norm 0.4446 (0.4891)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:14:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [64/100][40/48]	eta 0:00:05 lr 0.000350	time 0.5542 (0.6333)	loss 3.2084 (3.7104)	Acc@1 33.008 (24.895)	Acc@5 59.180 (49.085)	grad_norm 0.6394 (0.4933)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:14:10 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 64 training takes 0:00:30
+[2026-01-15 18:14:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.332 (2.332)	Loss 1.9834 (1.9834)	Acc@1 52.344 (52.344)	Acc@5 80.664 (80.664)	Mem 27934MB
+[2026-01-15 18:14:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:14:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 54.250 Acc@5 82.330
+[2026-01-15 18:14:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 54.2%
+[2026-01-15 18:14:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 54.45%
+[2026-01-15 18:14:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [65/100][0/48]	eta 0:03:08 lr 0.000347	time 3.9293 (3.9293)	loss 3.6476 (3.6476)	Acc@1 30.273 (30.273)	Acc@5 57.617 (57.617)	grad_norm 0.4666 (0.4666)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:14:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [65/100][20/48]	eta 0:00:20 lr 0.000340	time 0.5567 (0.7171)	loss 3.5090 (3.5837)	Acc@1 30.859 (28.423)	Acc@5 56.445 (53.823)	grad_norm 0.5526 (0.5530)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:14:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [65/100][40/48]	eta 0:00:05 lr 0.000333	time 0.5576 (0.6388)	loss 3.2067 (3.6310)	Acc@1 33.789 (27.439)	Acc@5 63.477 (52.339)	grad_norm 0.5150 (0.5203)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:14:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 65 training takes 0:00:30
+[2026-01-15 18:14:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.505 (2.505)	Loss 1.8398 (1.8398)	Acc@1 55.859 (55.859)	Acc@5 83.984 (83.984)	Mem 27934MB
+[2026-01-15 18:14:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:14:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 56.140 Acc@5 83.560
+[2026-01-15 18:14:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 56.1%
+[2026-01-15 18:14:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 56.14%
+[2026-01-15 18:14:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [66/100][0/48]	eta 0:02:55 lr 0.000330	time 3.6662 (3.6662)	loss 3.9705 (3.9705)	Acc@1 23.438 (23.438)	Acc@5 44.336 (44.336)	grad_norm 0.4190 (0.4190)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [66/100][20/48]	eta 0:00:19 lr 0.000323	time 0.5636 (0.7057)	loss 3.9852 (3.7283)	Acc@1 20.508 (24.340)	Acc@5 41.406 (48.456)	grad_norm 0.5413 (0.4685)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [66/100][40/48]	eta 0:00:05 lr 0.000316	time 0.5574 (0.6336)	loss 3.2001 (3.7266)	Acc@1 36.328 (24.829)	Acc@5 61.523 (49.128)	grad_norm 0.5773 (0.4759)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:19 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 66 training takes 0:00:29
+[2026-01-15 18:15:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.347 (2.347)	Loss 1.8369 (1.8369)	Acc@1 56.641 (56.641)	Acc@5 85.547 (85.547)	Mem 27934MB
+[2026-01-15 18:15:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:15:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 55.830 Acc@5 83.470
+[2026-01-15 18:15:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 55.8%
+[2026-01-15 18:15:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 56.14%
+[2026-01-15 18:15:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [67/100][0/48]	eta 0:03:05 lr 0.000313	time 3.8668 (3.8668)	loss 3.3893 (3.3893)	Acc@1 33.008 (33.008)	Acc@5 57.422 (57.422)	grad_norm 0.5723 (0.5723)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:38 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [67/100][20/48]	eta 0:00:20 lr 0.000306	time 0.5561 (0.7176)	loss 4.0968 (3.8463)	Acc@1 15.039 (23.047)	Acc@5 35.938 (45.898)	grad_norm 0.3286 (0.4564)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:49 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [67/100][40/48]	eta 0:00:05 lr 0.000299	time 0.5573 (0.6391)	loss 3.3294 (3.7899)	Acc@1 32.422 (23.962)	Acc@5 60.547 (47.132)	grad_norm 0.6781 (0.4651)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:15:53 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 67 training takes 0:00:30
+[2026-01-15 18:15:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.936 (1.936)	Loss 1.8281 (1.8281)	Acc@1 55.859 (55.859)	Acc@5 83.789 (83.789)	Mem 27934MB
+[2026-01-15 18:15:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:15:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 56.250 Acc@5 83.550
+[2026-01-15 18:15:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 56.2%
+[2026-01-15 18:15:57 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 56.25%
+[2026-01-15 18:16:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [68/100][0/48]	eta 0:03:34 lr 0.000296	time 4.4736 (4.4736)	loss 3.8149 (3.8149)	Acc@1 24.609 (24.609)	Acc@5 48.047 (48.047)	grad_norm 0.4674 (0.4674)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:16:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [68/100][20/48]	eta 0:00:20 lr 0.000289	time 0.5587 (0.7430)	loss 2.9486 (3.5790)	Acc@1 38.672 (29.343)	Acc@5 63.477 (54.074)	grad_norm 0.5938 (0.5145)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:16:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [68/100][40/48]	eta 0:00:05 lr 0.000282	time 0.5597 (0.6527)	loss 4.0413 (3.6596)	Acc@1 18.750 (27.439)	Acc@5 38.281 (51.462)	grad_norm 0.4605 (0.5069)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:16:28 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 68 training takes 0:00:30
+[2026-01-15 18:16:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.262 (2.262)	Loss 1.8291 (1.8291)	Acc@1 56.250 (56.250)	Acc@5 83.398 (83.398)	Mem 27934MB
+[2026-01-15 18:16:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:16:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 57.720 Acc@5 84.560
+[2026-01-15 18:16:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 57.7%
+[2026-01-15 18:16:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 57.72%
+[2026-01-15 18:16:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [69/100][0/48]	eta 0:02:40 lr 0.000280	time 3.3396 (3.3396)	loss 3.6939 (3.6939)	Acc@1 28.125 (28.125)	Acc@5 51.953 (51.953)	grad_norm 0.5056 (0.5056)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:16:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [69/100][20/48]	eta 0:00:19 lr 0.000273	time 0.5587 (0.6903)	loss 3.6043 (3.6182)	Acc@1 27.930 (27.725)	Acc@5 57.227 (52.651)	grad_norm 0.4983 (0.5091)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:16:58 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [69/100][40/48]	eta 0:00:05 lr 0.000266	time 0.5593 (0.6259)	loss 4.0908 (3.6361)	Acc@1 16.992 (27.515)	Acc@5 37.500 (52.167)	grad_norm 0.4440 (0.5054)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:17:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 69 training takes 0:00:29
+[2026-01-15 18:17:04 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.275 (2.275)	Loss 1.7793 (1.7793)	Acc@1 57.617 (57.617)	Acc@5 83.203 (83.203)	Mem 27934MB
+[2026-01-15 18:17:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:17:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 58.160 Acc@5 84.630
+[2026-01-15 18:17:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 58.2%
+[2026-01-15 18:17:06 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 58.16%
+[2026-01-15 18:17:09 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [70/100][0/48]	eta 0:02:38 lr 0.000264	time 3.3073 (3.3073)	loss 3.8567 (3.8567)	Acc@1 24.219 (24.219)	Acc@5 49.219 (49.219)	grad_norm 0.4450 (0.4450)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:17:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [70/100][20/48]	eta 0:00:19 lr 0.000257	time 0.5541 (0.6884)	loss 3.9626 (3.6884)	Acc@1 22.461 (27.334)	Acc@5 47.461 (52.000)	grad_norm 0.6113 (0.5202)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:17:32 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [70/100][40/48]	eta 0:00:04 lr 0.000251	time 0.5574 (0.6243)	loss 3.0606 (3.6776)	Acc@1 38.086 (26.686)	Acc@5 65.820 (51.334)	grad_norm 0.5734 (0.5046)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:17:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 70 training takes 0:00:29
+[2026-01-15 18:17:36 TinyViT-5M-CIFAR100-LargeScale] (utils.py 257): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_70.pth saving......
+[2026-01-15 18:17:36 TinyViT-5M-CIFAR100-LargeScale] (utils.py 259): INFO output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_70.pth saved !!!
+[2026-01-15 18:17:39 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.669 (2.669)	Loss 1.8242 (1.8242)	Acc@1 57.812 (57.812)	Acc@5 82.617 (82.617)	Mem 27934MB
+[2026-01-15 18:17:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:17:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 57.990 Acc@5 84.570
+[2026-01-15 18:17:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 58.0%
+[2026-01-15 18:17:41 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 58.16%
+[2026-01-15 18:17:44 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][0/48]	eta 0:02:50 lr 0.000248	time 3.5450 (3.5450)	loss 3.0262 (3.0262)	Acc@1 34.766 (34.766)	Acc@5 63.672 (63.672)	grad_norm 0.5099 (0.5099)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:17:55 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][20/48]	eta 0:00:19 lr 0.000242	time 0.5593 (0.6987)	loss 3.2315 (3.6377)	Acc@1 39.844 (27.158)	Acc@5 63.867 (51.525)	grad_norm 0.5364 (0.4974)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:18:07 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][40/48]	eta 0:00:05 lr 0.000235	time 0.5558 (0.6289)	loss 3.2377 (3.6304)	Acc@1 34.375 (27.677)	Acc@5 60.547 (52.301)	grad_norm 0.5362 (0.4987)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:18:11 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 71 training takes 0:00:29
+[2026-01-15 18:18:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.465 (2.465)	Loss 1.7598 (1.7598)	Acc@1 58.008 (58.008)	Acc@5 84.766 (84.766)	Mem 27934MB
+[2026-01-15 18:18:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:18:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 57.930 Acc@5 85.130
+[2026-01-15 18:18:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 57.9%
+[2026-01-15 18:18:15 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 58.16%
+[2026-01-15 18:18:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [72/100][0/48]	eta 0:02:40 lr 0.000233	time 3.3478 (3.3478)	loss 4.0086 (4.0086)	Acc@1 21.289 (21.289)	Acc@5 41.406 (41.406)	grad_norm 0.5017 (0.5017)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:18:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [72/100][20/48]	eta 0:00:19 lr 0.000226	time 0.5570 (0.6892)	loss 2.9365 (3.5553)	Acc@1 37.500 (29.009)	Acc@5 66.211 (54.929)	grad_norm 0.5090 (0.5289)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:18:40 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [72/100][40/48]	eta 0:00:04 lr 0.000220	time 0.5535 (0.6248)	loss 3.0276 (3.5699)	Acc@1 41.211 (29.578)	Acc@5 65.430 (55.173)	grad_norm 0.5997 (0.5259)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:18:45 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 72 training takes 0:00:29
+[2026-01-15 18:18:47 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.198 (2.198)	Loss 1.7471 (1.7471)	Acc@1 58.984 (58.984)	Acc@5 84.766 (84.766)	Mem 27934MB
+[2026-01-15 18:18:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:18:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 58.890 Acc@5 85.300
+[2026-01-15 18:18:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 58.9%
+[2026-01-15 18:18:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 58.89%
+[2026-01-15 18:18:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [73/100][0/48]	eta 0:02:46 lr 0.000218	time 3.4663 (3.4663)	loss 3.2559 (3.2559)	Acc@1 39.648 (39.648)	Acc@5 65.625 (65.625)	grad_norm 0.5852 (0.5852)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:03 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [73/100][20/48]	eta 0:00:19 lr 0.000212	time 0.5562 (0.6963)	loss 3.4710 (3.5703)	Acc@1 33.594 (29.036)	Acc@5 60.156 (54.009)	grad_norm 0.5206 (0.4965)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:14 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [73/100][40/48]	eta 0:00:05 lr 0.000206	time 0.5576 (0.6279)	loss 3.7321 (3.5655)	Acc@1 29.102 (29.321)	Acc@5 52.734 (54.735)	grad_norm 0.4219 (0.5015)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 73 training takes 0:00:29
+[2026-01-15 18:19:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 2.467 (2.467)	Loss 1.6992 (1.6992)	Acc@1 58.398 (58.398)	Acc@5 85.547 (85.547)	Mem 27934MB
+[2026-01-15 18:19:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:19:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 59.000 Acc@5 85.460
+[2026-01-15 18:19:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 59.0%
+[2026-01-15 18:19:22 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 59.00%
+[2026-01-15 18:19:26 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [74/100][0/48]	eta 0:02:52 lr 0.000203	time 3.5883 (3.5883)	loss 3.8945 (3.8945)	Acc@1 25.781 (25.781)	Acc@5 48.047 (48.047)	grad_norm 0.4182 (0.4182)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:37 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [74/100][20/48]	eta 0:00:19 lr 0.000197	time 0.5574 (0.7015)	loss 4.0221 (3.7479)	Acc@1 17.188 (25.074)	Acc@5 42.383 (49.535)	grad_norm 0.5204 (0.4889)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:48 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [74/100][40/48]	eta 0:00:05 lr 0.000192	time 0.5560 (0.6309)	loss 3.0850 (3.7311)	Acc@1 39.648 (26.272)	Acc@5 66.406 (50.605)	grad_norm 0.5250 (0.5005)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:19:52 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 74 training takes 0:00:29
+[2026-01-15 18:19:54 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.894 (1.894)	Loss 1.7344 (1.7344)	Acc@1 58.789 (58.789)	Acc@5 84.375 (84.375)	Mem 27934MB
+[2026-01-15 18:19:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:19:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 59.010 Acc@5 85.800
+[2026-01-15 18:19:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 59.0%
+[2026-01-15 18:19:56 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 59.01%
+[2026-01-15 18:20:01 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [75/100][0/48]	eta 0:03:20 lr 0.000189	time 4.1697 (4.1697)	loss 2.8874 (2.8874)	Acc@1 40.625 (40.625)	Acc@5 68.359 (68.359)	grad_norm 0.5550 (0.5550)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:20:12 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [75/100][20/48]	eta 0:00:20 lr 0.000183	time 0.5592 (0.7296)	loss 3.8751 (3.6790)	Acc@1 22.266 (26.823)	Acc@5 47.656 (51.293)	grad_norm 0.4354 (0.4823)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:20:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [75/100][40/48]	eta 0:00:05 lr 0.000178	time 0.5516 (0.6454)	loss 3.9380 (3.6716)	Acc@1 22.266 (27.996)	Acc@5 43.555 (52.077)	grad_norm 0.4049 (0.4764)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 18:20:27 TinyViT-5M-CIFAR100-LargeScale] (main.py 280): INFO EPOCH 75 training takes 0:00:30
+[2026-01-15 18:20:29 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/10]	Time 1.874 (1.874)	Loss 1.7393 (1.7393)	Acc@1 58.789 (58.789)	Acc@5 84.180 (84.180)	Mem 27934MB
+[2026-01-15 18:20:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 18:20:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 59.330 Acc@5 85.830
+[2026-01-15 18:20:31 TinyViT-5M-CIFAR100-LargeScale] (main.py 162): INFO Accuracy of the network on the 10000 test images: 59.3%
+[2026-01-15 19:01:30 TinyViT-5M-CIFAR100-LargeScale] (main.py 165): INFO Max accuracy: 59.33%
+[2026-01-15 19:01:34 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [76/100][0/48]	eta 0:02:48 lr 0.000176	time 3.5001 (3.5001)	loss 3.3329 (3.3329)	Acc@1 35.547 (35.547)	Acc@5 61.914 (61.914)	grad_norm 0.5369 (0.5369)	loss_scale 8192.0000 (8192.0000)	mem 27934MB
+[2026-01-15 19:17:18 TinyViT-5M-CIFAR100-LargeScale] (main.py 558): INFO Full config saved to output/TinyViT-5M-CIFAR100-LargeScale/default/config.json
+[2026-01-15 19:17:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 572): INFO ===== git =====
+[2026-01-15 19:17:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 573): INFO {'branch': 'main', 'git_hash': '0e12cc5'}
+[2026-01-15 19:17:21 TinyViT-5M-CIFAR100-LargeScale] (main.py 576): INFO AMP_ENABLE: true
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  COLOR_JITTER: 0.4
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+BASE:
+- ''
+DATA:
+  BATCH_SIZE: 512
+  DATASET: cifar100
+  DATA_PATH: ''
+  DEBUG: false
+  FNAME_FORMAT: '{}.jpeg'
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  MEAN_AND_STD_TYPE: default
+  NUM_WORKERS: 8
+  PIN_MEMORY: true
+DISTILL:
+  ENABLED: false
+  LOGITS_TOPK: 100
+  SAVE_TEACHER_LOGITS: false
+  TEACHER_LOGITS_PATH: ''
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+  NAME: TinyViT-5M-CIFAR100-LargeScale
+  NUM_CLASSES: 100
+  PRETRAINED: ''
+  PRETRAINED_TIMM: true
+  RESUME: ''
+  TINY_VIT:
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIMS:
+    - 64
+    - 128
+    - 160
+    - 320
+    IN_CHANS: 3
+    LOCAL_CONV_SIZE: 3
+    MBCONV_EXPAND_RATIO: 4.0
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 2
+    - 4
+    - 5
+    - 10
+    WINDOW_SIZES:
+    - 7
+    - 7
+    - 14
+    - 7
+  TYPE: tiny_vit
+OUTPUT: output/TinyViT-5M-CIFAR100-LargeScale/default
+PRINT_FREQ: 20
+SAVE_FREQ: 10
+SEED: 0
+TAG: default
+TEST:
+  CROP: true
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.002
+  CLIP_GRAD: 5.0
+  EPOCHS: 100
+  EVAL_BN_WHEN_TRAINING: false
+  LAYER_LR_DECAY: 0.9
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    NAME: cosine
+  MIN_LR: 1.0e-05
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  START_EPOCH: 0
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 1.0e-06
+  WEIGHT_DECAY: 0.05
+
+[2026-01-15 19:17:23 TinyViT-5M-CIFAR100-LargeScale] (main.py 62): INFO Creating model:tiny_vit/TinyViT-5M-CIFAR100-LargeScale
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 70): INFO TinyViT(
+  (patch_embed): PatchEmbed(
+    (seq): Sequential(
+      (0): Conv2d_BN(
+        (c): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): GELU(approximate='none')
+      (2): Conv2d_BN(
+        (c): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (layers): ModuleList(
+    (0): ConvLayer(
+      (blocks): ModuleList(
+        (0-1): 2 x MBConv(
+          (conv1): Conv2d_BN(
+            (c): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act1): GELU(approximate='none')
+          (conv2): Conv2d_BN(
+            (c): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256, bias=False)
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act2): GELU(approximate='none')
+          (conv3): Conv2d_BN(
+            (c): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (act3): GELU(approximate='none')
+          (drop_path): Identity()
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=128, bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (1): BasicLayer(
+      dim=128, input_resolution=(28, 28), depth=2
+      (blocks): ModuleList(
+        (0-1): 2 x TinyViTBlock(
+          dim=128, input_resolution=(28, 28), num_heads=4, window_size=7, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=128, out_features=384, bias=True)
+            (proj): Linear(in_features=128, out_features=128, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=128, out_features=512, bias=True)
+            (fc2): Linear(in_features=512, out_features=128, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(128, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(160, 160, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=160, bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(160, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (2): BasicLayer(
+      dim=160, input_resolution=(14, 14), depth=6
+      (blocks): ModuleList(
+        (0-5): 6 x TinyViTBlock(
+          dim=160, input_resolution=(14, 14), num_heads=5, window_size=14, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((160,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=160, out_features=480, bias=True)
+            (proj): Linear(in_features=160, out_features=160, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((160,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=160, out_features=640, bias=True)
+            (fc2): Linear(in_features=640, out_features=160, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=160, bias=False)
+            (bn): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+      (downsample): PatchMerging(
+        (act): GELU(approximate='none')
+        (conv1): Conv2d_BN(
+          (c): Conv2d(160, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv2): Conv2d_BN(
+          (c): Conv2d(320, 320, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=320, bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (conv3): Conv2d_BN(
+          (c): Conv2d(320, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (3): BasicLayer(
+      dim=320, input_resolution=(7, 7), depth=2
+      (blocks): ModuleList(
+        (0-1): 2 x TinyViTBlock(
+          dim=320, input_resolution=(7, 7), num_heads=10, window_size=7, mlp_ratio=4.0
+          (drop_path): Identity()
+          (attn): Attention(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+            (qkv): Linear(in_features=320, out_features=960, bias=True)
+            (proj): Linear(in_features=320, out_features=320, bias=True)
+          )
+          (mlp): Mlp(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=320, out_features=1280, bias=True)
+            (fc2): Linear(in_features=1280, out_features=320, bias=True)
+            (act): GELU(approximate='none')
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (local_conv): Conv2d_BN(
+            (c): Conv2d(320, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=320, bias=False)
+            (bn): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+      )
+    )
+  )
+  (norm_head): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+  (head): Linear(in_features=320, out_features=100, bias=True)
+)
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 85): INFO number of params: 5103864
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 119): INFO auto resuming from output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_70.pth
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (utils.py 60): INFO ==============> Resuming form output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_70.pth....................
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (utils.py 94): INFO <All keys matched successfully>
+[2026-01-15 19:17:24 TinyViT-5M-CIFAR100-LargeScale] (utils.py 104): INFO => loaded successfully 'output/TinyViT-5M-CIFAR100-LargeScale/default/ckpt_epoch_70.pth' (epoch 70)
+[2026-01-15 19:17:36 TinyViT-5M-CIFAR100-LargeScale] (main.py 451): INFO Test: [0/20]	Time 11.517 (11.517)	Loss 1.8291 (1.8291)	Acc@1 57.422 (57.422)	Acc@5 82.617 (82.617)	Mem 8416MB
+[2026-01-15 19:17:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 461): INFO  The number of validation samples is 10000
+[2026-01-15 19:17:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 463): INFO  * Acc@1 57.940 Acc@5 84.420
+[2026-01-15 19:17:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 128): INFO Accuracy of the network on the 10000 test images: 57.9%
+[2026-01-15 19:17:42 TinyViT-5M-CIFAR100-LargeScale] (main.py 143): INFO Start training
+[2026-01-15 19:18:02 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][0/97]	eta 0:32:33 lr 0.000006	time 20.1422 (20.1422)	loss 4.0190 (4.0190)	Acc@1 16.211 (16.211)	Acc@5 37.305 (37.305)	grad_norm 0.5717 (0.5717)	loss_scale 8192.0000 (8192.0000)	mem 27925MB
+[2026-01-15 19:18:13 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][20/97]	eta 0:01:54 lr 0.000006	time 0.5462 (1.4826)	loss 3.7266 (3.8536)	Acc@1 31.445 (23.205)	Acc@5 54.492 (46.484)	grad_norm 0.6378 (0.6234)	loss_scale 8192.0000 (8192.0000)	mem 27926MB
+[2026-01-15 19:18:24 TinyViT-5M-CIFAR100-LargeScale] (main.py 259): INFO Train: [71/100][40/97]	eta 0:00:58 lr 0.000006	time 0.5509 (1.0275)	loss 3.6398 (3.8094)	Acc@1 31.836 (24.338)	Acc@5 56.836 (47.632)	grad_norm 0.5948 (0.6135)	loss_scale 8192.0000 (8192.0000)	mem 27926MB
