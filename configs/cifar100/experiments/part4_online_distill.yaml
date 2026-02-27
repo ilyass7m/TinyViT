@@ -1,0 +1,84 @@
+# ============================================================================
+# Part 4: Online Distillation with Logits + Features (TinyViT-21M -> 5M)
+# ============================================================================
+# Output: output/P4_online_logits_features/
+#
+# This config enables online distillation where the teacher (TinyViT-21M)
+# runs forward passes during training. Supports both logits-only and
+# logits+features modes.
+#
+# Usage (Logits + Features):
+#   torchrun --nproc_per_node=1 main.py \
+#     --cfg configs/cifar100/experiments/part4_online_distill.yaml \
+#     --data-path ./data \
+#     --output output/P4_online_logits_features \
+#     --opts DISTILL.TEACHER_CHECKPOINT output/P1_teacher_tinyvit21m/.../ckpt_best.pth
+#
+# Usage (Logits Only):
+#   Add --opts DISTILL.FEATURE_ENABLED False
+#
+# Beta Ablation: Change DISTILL.FEATURE_WEIGHT to 0.25, 0.5, or 1.0
+# ============================================================================
+
+MODEL:
+  NAME: TinyViT-5M-OnlineDistill
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.0
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.0
+  TINY_VIT:
+    DEPTHS: [2, 2, 6, 2]
+    NUM_HEADS: [2, 4, 5, 10]
+    WINDOW_SIZES: [7, 7, 14, 7]
+    EMBED_DIMS: [64, 128, 160, 320]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 100
+  WARMUP_EPOCHS: 10
+  BASE_LR: 1e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  AUTO_RESUME: True
+
+DISTILL:
+  ENABLED: False
+  ONLINE_DISTILL: True
+  TEACHER_TYPE: tiny_vit
+  TEACHER_CHECKPOINT: ''
+  TEMPERATURE: 1.0
+  FEATURE_ENABLED: True
+  FEATURE_WEIGHT: 0.5
+  FEATURE_DIM_STUDENT: 320
+  FEATURE_DIM_TEACHER: 576
+  TEACHER_TINY_VIT:
+    EMBED_DIMS: [96, 192, 384, 576]
+    DEPTHS: [2, 2, 6, 2]
+    NUM_HEADS: [3, 6, 12, 18]
+    WINDOW_SIZES: [7, 7, 14, 7]
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 50
+SAVE_FREQ: 10

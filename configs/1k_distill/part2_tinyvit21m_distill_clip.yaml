@@ -1,0 +1,65 @@
+# ============================================================================
+# Part 2: TinyViT-21M Distillation from CLIP on ImageNet-1K
+# ============================================================================
+# Output: output/P2_tinyvit21m_distill_clip/
+#
+# Requires: CLIP-ViT-L logits saved with part2_save_logits_clip.yaml
+#
+# Usage:
+#   torchrun --nproc_per_node=2 main.py \
+#     --cfg configs/1k_distill/part2_tinyvit21m_distill_clip.yaml \
+#     --data-path /path/to/imagenet \
+#     --output output/P2_tinyvit21m_distill_clip \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l/
+# ============================================================================
+
+MODEL:
+  NAME: TinyViT-21M-1k-Distill-CLIP
+  TYPE: tiny_vit
+  NUM_CLASSES: 1000
+  DROP_PATH_RATE: 0.1
+  LABEL_SMOOTHING: 0.0
+  TINY_VIT:
+    DEPTHS: [2, 2, 6, 2]
+    NUM_HEADS: [3, 6, 12, 18]
+    WINDOW_SIZES: [7, 7, 14, 7]
+    EMBED_DIMS: [96, 192, 384, 576]
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 256
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 300
+  WARMUP_EPOCHS: 20
+  BASE_LR: 1e-3
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  AUTO_RESUME: True
+
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''
+  LOGITS_TOPK: 100
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 100
+SAVE_FREQ: 10

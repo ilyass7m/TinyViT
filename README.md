@@ -1,124 +1,243 @@
-# TinyViT: Fast Pretraining Distillation for Small Vision Transformers [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Tiny%20vision%20transformer%20models,%20SOTA%20performance!!&url=https://github.com/microsoft/Cream/tree/main/TinyViT&via=houwen_peng&hashtags=ViT,tiny,efficient)
+# TinyViT: Fast Pretraining Distillation for Small Vision Transformers
 
+This repository contains our reproduction and extension of the TinyViT paper for a CentraleSupélec Deep Learning course project.
 
-:pushpin: This is an official PyTorch implementation of **[ECCV 2022]** - [TinyViT: Fast Pretraining Distillation for Small Vision Transformers](https://arxiv.org/pdf/2207.10666.pdf).
+**Original Paper**: [TinyViT: Fast Pretraining Distillation for Small Vision Transformers](https://arxiv.org/pdf/2207.10666.pdf) (ECCV 2022)
 
-TinyViT is a new family of **tiny and efficient** vision transformers pretrained on **large-scale** datasets with our proposed **fast distillation framework**. The central idea is to **transfer knowledge** from **large pretrained models** to small ones. The logits of large teacher models are sparsified and stored in disk in advance to **save the memory cost and computation overheads**.
+**Authors of this reproduction**: Ilyas Madah, Moghit Yebari
 
-:rocket: TinyViT with **only 21M parameters** achieves **84.8%** top-1 accuracy on ImageNet-1k, and **86.5%** accuracy under 512x512 resolutions.
+---
 
-<div align="center">
-    <img width="80%" alt="TinyViT overview" src=".figure/framework.png"/>
-</div>
+## Overview
 
-:sunny: Hiring research interns for neural architecture search, tiny transformer design, model compression projects: houwen.peng@microsoft.com.
+TinyViT is a family of compact vision transformers (5-21M parameters) trained using an efficient offline distillation framework. The key idea is to **pre-compute and store** sparse teacher logits, eliminating the teacher from the training loop entirely.
 
-## Highlights
+### Key Results from Our Reproduction
 
-<div align="center">
-    <img width="80%" src=".figure/performance.png"/>
-</div>
+| Experiment | Accuracy | Notes |
+|------------|----------|-------|
+| TinyViT-5M Scratch (CIFAR-100) | 78.23% | Baseline |
+| TinyViT-5M + ResNet-50 Distill | 77.89% | Best teacher on CIFAR-100 |
+| TinyViT-21M Scratch → CIFAR-100 | 81.72% | Transfer from IN-1K |
+| TinyViT-21M Distill → CIFAR-100 | **85.44%** | +3.72% improvement |
+| Online Distill + Features (β=0.5) | 75.50% | Our extension |
 
-* TinyViT-21M ![](./.figure/distill.png) on IN-22k achieves **84.8%** top-1 accuracy on IN-1k, and **86.5%** accuracy under 512x512 resolutions.
-* TinyViT-21M **trained from scratch on IN-1k** without distillation achieves **83.1** top-1 accuracy, under **4.3 GFLOPs** and **1,571 images/s** throughput on V100 GPU.
-* TinyViT-5M ![](./.figure/distill.png) reaches **80.7%** top-1 accuracy on IN-1k under 3,060 images/s throughput.
-* Save teacher logits **once**, and **reuse** the saved sparse logits to distill **arbitrary students without overhead** of teacher model. It takes **16 GB / 481 GB** storage space for IN-1k (300 epochs) and IN-22k (90 epochs), respectively.
+---
 
-## Features
-1. **Efficient Distillation**. The teacher logits can be saved in parallel and reused for arbitrary student models, to avoid re-forwarding cost of the large teacher model.
+## Installation
 
-2. **Reproducibility**. We provide the hyper-parameters of [IN-1k training](./configs/1k), [IN-22k pre-training with distillation](./configs/22k_distill), [IN-22kto1k fine-tuning](./configs/22kto1k), and [higher resolution fine-tuning](./configs/higher_resolution). In addition, all training logs are public (in Model Zoo).
+```bash
+# Clone repository
+git clone https://github.com/your-repo/TinyViT.git
+cd TinyViT
 
-3. **Ease of Use**. One file to build a TinyViT model.
-The file [`models/tiny_vit.py`](./models/tiny_vit.py) defines TinyViT model family.
-    ```python
-    from tiny_vit import tiny_vit_21m_224
-    model = tiny_vit_21m_224(pretrained=True)
-    output = model(image)
-    ```
+# Create environment
+conda create -n tinyvit python=3.9 -y
+conda activate tinyvit
 
-    An inference script: [`inference.py`](./inference.py).
+# Install dependencies
+pip install torch torchvision torchaudio
+pip install timm wandb yacs termcolor
+```
 
-4. **Extensibility**. Add custom dataset, student and teacher models with no need to modify your code.
-The class [`DatasetWrapper`](./data/build.py#L74) wraps the general dataset to support saving and loading sparse logits. It only need the logits of models for knowledge distillation.
+---
 
-5. **Public teacher model**. We provide CLIP-ViT-Large/16-22k, a powerful teacher model on pretraining distillation (Acc@1 85.894 Acc@5 97.566 on IN-1k). We finetuned CLIP-ViT-Large/16 released by OpenAI on IN-22k.
+## Reproduction Roadmap
 
-6. **Online Logging**. Support [wandb](https://wandb.ai) for checking the results anytime anywhere.
+Our experiments are organized into 4 parts matching the report structure.
 
-## Model Zoo
+### Part 1: CIFAR-100 Direct Training
 
-Model                                      | Pretrain | Input | Acc@1 | Acc@5 | #Params | MACs | FPS  | 22k Model | 1k Model
-:-----------------------------------------:|:---------|:-----:|:-----:|:-----:|:-------:|:----:|:----:|:---------:|:--------:
-TinyViT-5M ![](./.figure/distill.png)       | IN-22k   |224x224| 80.7  | 95.6  | 5.4M    | 1.3G | 3,060|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_22k_distill.pth)/[config](./configs/22k_distill/tiny_vit_5m_22k_distill.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_22k_distill.log)|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_22kto1k_distill.pth)/[config](./configs/22kto1k/tiny_vit_5m_22kto1k.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_22kto1k_distill.log)
-TinyViT-11M ![](./.figure/distill.png)      | IN-22k   |224x224| 83.2  | 96.5  | 11M     | 2.0G | 2,468|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_22k_distill.pth)/[config](./configs/22k_distill/tiny_vit_11m_22k_distill.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_22k_distill.log)|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_22kto1k_distill.pth)/[config](./configs/22kto1k/tiny_vit_11m_22kto1k.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_22kto1k_distill.log)
-TinyViT-21M ![](./.figure/distill.png)      | IN-22k   |224x224| 84.8  | 97.3  | 21M     | 4.3G | 1,571|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22k_distill.pth)/[config](./configs/22k_distill/tiny_vit_21m_22k_distill.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22k_distill.log)|[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_distill.pth)/[config](./configs/22kto1k/tiny_vit_21m_22kto1k.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_distill.log)
-TinyViT-21M-384 ![](./.figure/distill.png)  | IN-22k   |384x384| 86.2  | 97.8  | 21M     | 13.8G| 394  | - |[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_384_distill.pth)/[config](./configs/higher_resolution/tiny_vit_21m_224to384.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_384_distill.log)
-TinyViT-21M-512 ![](./.figure/distill.png)  | IN-22k   |512x512| 86.5  | 97.9  | 21M     | 27.0G| 167  | - |[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_512_distill.pth)/[config](./configs/higher_resolution/tiny_vit_21m_384to512.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_22kto1k_512_distill.log)
-TinyViT-5M                                 | IN-1k    |224x224| 79.1  | 94.8  | 5.4M    | 1.3G | 3,060| - |[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_1k.pth)/[config](./configs/1k/tiny_vit_5m.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_5m_1k.log)
-TinyViT-11M                                | IN-1k    |224x224| 81.5  | 95.8  | 11M     | 2.0G | 2,468| - |[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_1k.pth)/[config](./configs/1k/tiny_vit_11m.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_11m_1k.log)
-TinyViT-21M                                | IN-1k    |224x224| 83.1  | 96.5  | 21M     | 4.3G | 1,571| - |[link](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_1k.pth)/[config](./configs/1k/tiny_vit_21m.yaml)/[log](https://github.com/wkcn/TinyViT-model-zoo/releases/download/checkpoints/tiny_vit_21m_1k.log)
+Train TinyViT-5M on CIFAR-100 with different teachers.
 
-ImageNet-22k (IN-22k) is the same as ImageNet-21k (IN-21k), where the number of classes is 21,841.
+```bash
+# 1. Scratch Baseline
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part1_scratch_baseline.yaml \
+  --data-path ./data --output output/P1_scratch_baseline
 
-The models with ![](./.figure/distill.png) are pretrained on ImageNet-22k with the distillation of CLIP-ViT-L/14-22k, then finetuned on ImageNet-1k.
+# 2. Train ViT-Base Teacher
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part1_teacher_vit_base.yaml \
+  --data-path ./data --output output/P1_teacher_vit_base
 
-We finetune the 1k models on IN-1k to higher resolution progressively (224 -> 384 -> 512) [[detail]](./docs/TRAINING.md), without any IN-1k knowledge distillation.
+# 3. Save Teacher Logits (TopK=50)
+torchrun --nproc_per_node=1 save_logits.py \
+  --cfg configs/cifar100/experiments/part1_save_logits_vit_base.yaml \
+  --data-path ./data \
+  --resume output/P1_teacher_vit_base/ViT-Base-CIFAR100-Teacher/default/ckpt_epoch_29.pth \
+  --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/vit_base_top50/
 
-## Getting Started
-:beginner: Here is the setup tutorial and evaluation scripts.
+# 4. Distill Student from Saved Logits
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part1_distill_vit_base.yaml \
+  --data-path ./data --output output/P1_distill_vit_base \
+  --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/vit_base_top50/
+```
 
-### Install dependencies and prepare datasets
-- [Preparation](./docs/PREPARATION.md)
+**TopK Ablation**: Change `DISTILL.LOGITS_TOPK` to 10, 20, 50, or 75 when saving logits.
 
-### Evaluate it !
-- [Evaluation](./docs/EVALUATION.md)
+### Part 2: ImageNet-1K Pretraining
 
-## Pretrain a TinyViT model on ImageNet
-:beginner: For the proposed fast pretraining distillation, we need to **save teacher sparse logits** firstly, then **pretrain a model**.
+Pretrain TinyViT-21M on ImageNet-1K with CLIP distillation.
 
-- [How to save teacher sparse logits?](./docs/SAVE_TEACHER_LOGITS.md)
-- [Let's train a TinyViT model](./docs/TRAINING.md)
+```bash
+# 1. Save CLIP Logits
+torchrun --nproc_per_node=2 save_logits.py \
+  --cfg configs/1k_distill/part2_save_logits_clip.yaml \
+  --data-path /path/to/imagenet \
+  --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l/
+
+# 2. Distill TinyViT-21M
+torchrun --nproc_per_node=2 main.py \
+  --cfg configs/1k_distill/part2_tinyvit21m_distill_clip.yaml \
+  --data-path /path/to/imagenet \
+  --output output/P2_tinyvit21m_distill_clip \
+  --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l/
+```
+
+### Part 3: Transfer Learning (IN-1K → CIFAR-100)
+
+Fine-tune pretrained checkpoints on CIFAR-100.
+
+```bash
+# From Scratch Pretrain
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part3_finetune_from_scratch.yaml \
+  --data-path ./data --output output/P3_finetune_from_scratch \
+  --pretrained /path/to/tiny_vit_21m_1k.pth
+
+# From Distill Pretrain
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part3_finetune_from_distill.yaml \
+  --data-path ./data --output output/P3_finetune_from_distill \
+  --pretrained output/P2_tinyvit21m_distill_clip/.../ckpt_best.pth
+```
+
+### Part 4: Online Feature Distillation (Extension)
+
+Our extension: combine logit and feature distillation online.
+
+```bash
+# First, train TinyViT-21M teacher on CIFAR-100
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part1_teacher_resnet50.yaml \
+  --data-path ./data --output output/P1_teacher_tinyvit21m \
+  --opts MODEL.TYPE tiny_vit MODEL.NAME TinyViT-21M-Teacher \
+         MODEL.TINY_VIT.EMBED_DIMS [96,192,384,576] \
+         MODEL.TINY_VIT.NUM_HEADS [3,6,12,18]
+
+# Online Distill with Logits + Features
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part4_online_distill.yaml \
+  --data-path ./data --output output/P4_online_logits_features \
+  --opts DISTILL.TEACHER_CHECKPOINT output/P1_teacher_tinyvit21m/.../ckpt_best.pth
+
+# Logits Only (ablation)
+torchrun --nproc_per_node=1 main.py \
+  --cfg configs/cifar100/experiments/part4_online_distill.yaml \
+  --data-path ./data --output output/P4_online_logits_only \
+  --opts DISTILL.TEACHER_CHECKPOINT output/P1_teacher_tinyvit21m/.../ckpt_best.pth \
+         DISTILL.FEATURE_ENABLED False
+```
+
+**Beta Ablation**: Change `DISTILL.FEATURE_WEIGHT` to 0.25, 0.5, or 1.0.
+
+---
+
+## Evaluation
+
+Evaluate any checkpoint on CIFAR-100:
+
+```bash
+python evaluate.py \
+  --checkpoint output/P1_distill_vit_base/.../ckpt_best.pth \
+  --model-type tiny_vit_5m \
+  --data-path ./data \
+  --batch-size 64
+```
+
+For ViT-Base teacher:
+```bash
+python evaluate.py \
+  --checkpoint output/P1_teacher_vit_base/.../ckpt_best.pth \
+  --model-type vit_base \
+  --data-path ./data
+```
+
+---
+
+## Explainability (GradCAM)
+
+Visualize attention patterns across models:
+
+```bash
+jupyter notebook explainability.ipynb
+```
+
+The notebook compares GradCAM heatmaps for:
+- Teacher (ViT-Base or TinyViT-21M)
+- Distilled Student (logits only)
+- Distilled Student (logits + features)
+- Scratch Baseline
+
+---
+
+## Config Files Structure
+
+```
+configs/
+├── cifar100/
+│   ├── experiments/
+│   │   ├── part1_scratch_baseline.yaml
+│   │   ├── part1_teacher_vit_base.yaml
+│   │   ├── part1_teacher_resnet50.yaml
+│   │   ├── part1_save_logits_vit_base.yaml
+│   │   ├── part1_distill_vit_base.yaml
+│   │   ├── part1_distill_resnet50.yaml
+│   │   ├── part3_finetune_from_scratch.yaml
+│   │   ├── part3_finetune_from_distill.yaml
+│   │   └── part4_online_distill.yaml
+│   ├── tiny_vit_5m_cifar100.yaml          # Base config
+│   └── tiny_vit_11m_cifar100.yaml
+├── 1k_distill/
+│   ├── part2_tinyvit21m_scratch.yaml
+│   ├── part2_tinyvit21m_distill_clip.yaml
+│   └── part2_save_logits_clip.yaml
+└── 1k/                                     # Original IN-1K configs
+```
+
+---
+
+## Key Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `main.py` | Training (scratch, distill, online distill) |
+| `save_logits.py` | Save sparse teacher logits |
+| `evaluate.py` | Standalone evaluation |
+| `validate_binary_logits.py` | Verify saved logits quality |
+| `explainability.ipynb` | GradCAM visualizations |
+
+---
 
 ## Citation
-
-If this repo is helpful for you, please consider to cite it. :mega: Thank you! :)
 
 ```bibtex
 @InProceedings{tiny_vit,
   title={TinyViT: Fast Pretraining Distillation for Small Vision Transformers},
   author={Wu, Kan and Zhang, Jinnian and Peng, Houwen and Liu, Mengchen and Xiao, Bin and Fu, Jianlong and Yuan, Lu},
-  booktitle={European conference on computer vision (ECCV)},
+  booktitle={European Conference on Computer Vision (ECCV)},
   year={2022}
 }
 ```
 
+---
 
-## Research Citing Our Work   
+## Acknowledgments
 
-:tada: We would like to acknowledge the following research work that cites and utilizes our method:
-
-<details>
-<summary>
-<a href="https://github.com/ChaoningZhang/MobileSAM">MobileSAM</a> (Faster Segment Anything: Towards Lightweight SAM for Mobile Applications) [<b>bib</b>]
-</summary>
-
-```bibtex
-@article{zhang2023faster,
-  title={Faster Segment Anything: Towards Lightweight SAM for Mobile Applications},
-  author={Zhang, Chaoning and Han, Dongshen and Qiao, Yu and Kim, Jung Uk and Bae, Sung Ho and Lee, Seungkyu and Hong, Choong Seon},
-  journal={arXiv preprint arXiv:2306.14289},
-  year={2023}
-}
-```
-</details>
-
-
-## Acknowledge
-
-Our code is based on [Swin Transformer](https://github.com/microsoft/swin-transformer), [LeViT](https://github.com/facebookresearch/LeViT), [pytorch-image-models](https://github.com/rwightman/pytorch-image-models), [CLIP](https://github.com/openai/CLIP) and [PyTorch](https://github.com/pytorch/pytorch). Thank contributors for their awesome contribution!
-
-
-## License
-
-- [License](./LICENSE)
+Based on [microsoft/Cream/TinyViT](https://github.com/microsoft/Cream/tree/main/TinyViT). Our reproduction adds:
+- CIFAR-100 experiment configs
+- Online feature distillation extension
+- GradCAM explainability analysis
+- Standalone evaluation scripts

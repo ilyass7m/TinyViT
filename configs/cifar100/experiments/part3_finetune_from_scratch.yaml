@@ -1,0 +1,61 @@
+# ============================================================================
+# Part 3: Finetune TinyViT-21M on CIFAR-100 (from IN-1K Scratch Pretrain)
+# ============================================================================
+# Output: output/P3_finetune_from_scratch/
+#
+# Pretrained checkpoint: Use official TinyViT-21M trained from scratch on IN-1K
+# Download from: https://github.com/wkcn/TinyViT-model-zoo/releases
+#
+# Usage:
+#   torchrun --nproc_per_node=1 main.py \
+#     --cfg configs/cifar100/experiments/part3_finetune_from_scratch.yaml \
+#     --data-path ./data \
+#     --output output/P3_finetune_from_scratch \
+#     --pretrained /path/to/tiny_vit_21m_1k.pth
+# ============================================================================
+
+MODEL:
+  NAME: TinyViT-21M-CIFAR100-FromScratch
+  TYPE: tiny_vit
+  NUM_CLASSES: 100
+  DROP_PATH_RATE: 0.1
+  LABEL_SMOOTHING: 0.1
+  TINY_VIT:
+    DEPTHS: [2, 2, 6, 2]
+    NUM_HEADS: [3, 6, 12, 18]
+    WINDOW_SIZES: [7, 7, 14, 7]
+    EMBED_DIMS: [96, 192, 384, 576]
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 25
+  WARMUP_EPOCHS: 3
+  BASE_LR: 2.5e-4
+  WARMUP_LR: 1e-7
+  MIN_LR: 1e-6
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 5.0
+  AUTO_RESUME: True
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+TEST:
+  CROP: True
+
+SEED: 42
+PRINT_FREQ: 50
+SAVE_FREQ: 5

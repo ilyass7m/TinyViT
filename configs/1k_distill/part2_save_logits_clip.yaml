@@ -1,0 +1,48 @@
+# ============================================================================
+# Part 2: Save CLIP-ViT-L Logits for ImageNet-1K Distillation
+# ============================================================================
+# Output: output/logits/clip_vit_l/
+#
+# Uses CLIP-ViT-L/14 finetuned on ImageNet-1K from timm library
+#
+# Usage:
+#   torchrun --nproc_per_node=2 save_logits.py \
+#     --cfg configs/1k_distill/part2_save_logits_clip.yaml \
+#     --data-path /path/to/imagenet \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/clip_vit_l/
+# ============================================================================
+
+MODEL:
+  NAME: CLIP-ViT-L-SaveLogits
+  TYPE: vit_large_patch14_clip_224.openai_ft_in1k
+  NUM_CLASSES: 1000
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: imagenet
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 64
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 10
+  BASE_LR: 1e-3
+
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''
+  LOGITS_TOPK: 100
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+SEED: 42
+PRINT_FREQ: 100

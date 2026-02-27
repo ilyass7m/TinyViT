@@ -1,0 +1,49 @@
+# ============================================================================
+# Part 1: Save ViT-Base Logits for CIFAR-100 Distillation
+# ============================================================================
+# Output: output/logits/vit_base_top50/
+#
+# Usage:
+#   torchrun --nproc_per_node=1 save_logits.py \
+#     --cfg configs/cifar100/experiments/part1_save_logits_vit_base.yaml \
+#     --data-path ./data \
+#     --resume output/P1_teacher_vit_base/ViT-Base-CIFAR100-Teacher/default/ckpt_epoch_29.pth \
+#     --opts DISTILL.TEACHER_LOGITS_PATH ./output/logits/vit_base_top50/
+#
+# TopK Ablation: Change DISTILL.LOGITS_TOPK to 10, 20, 50, or 75
+# ============================================================================
+
+MODEL:
+  NAME: ViT-Base-CIFAR100-SaveLogits
+  TYPE: vit_base_patch16_224
+  NUM_CLASSES: 100
+  PRETRAINED_TIMM: True
+
+DATA:
+  DATASET: cifar100
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  BATCH_SIZE: 128
+  NUM_WORKERS: 8
+  PIN_MEMORY: True
+
+TRAIN:
+  EPOCHS: 10
+  BASE_LR: 1e-3
+
+DISTILL:
+  ENABLED: True
+  TEACHER_LOGITS_PATH: ''
+  LOGITS_TOPK: 50
+
+AUG:
+  COLOR_JITTER: 0.4
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  REPROB: 0.25
+  REMODE: pixel
+  RECOUNT: 1
+  MIXUP: 0.0
+  CUTMIX: 0.0
+
+SEED: 42
+PRINT_FREQ: 100
