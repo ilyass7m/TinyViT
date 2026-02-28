@@ -12,17 +12,7 @@ This repository contains our reproduction and extension of the TinyViT paper for
 
 TinyViT is a family of compact vision transformers (5-21M parameters) trained using an efficient offline distillation framework. The key idea is to **pre-compute and store** sparse teacher logits, eliminating the teacher from the training loop entirely.
 
-### Key Results from Our Reproduction
 
-| Experiment | Accuracy | Notes |
-|------------|----------|-------|
-| TinyViT-5M Scratch (CIFAR-100) | 78.23% | Baseline |
-| TinyViT-5M + ResNet-50 Distill | 77.89% | Best teacher on CIFAR-100 |
-| TinyViT-21M Scratch → CIFAR-100 | 81.72% | Transfer from IN-1K |
-| TinyViT-21M Distill → CIFAR-100 | **85.44%** | +3.72% improvement |
-| Online Distill + Features (β=0.5) | 75.50% | Our extension |
-
----
 
 ## Installation
 
@@ -183,43 +173,11 @@ The notebook compares GradCAM heatmaps for:
 
 ---
 
-## Config Files Structure
 
-```
-configs/
-├── cifar100/
-│   ├── experiments/
-│   │   ├── part1_scratch_baseline.yaml
-│   │   ├── part1_teacher_vit_base.yaml
-│   │   ├── part1_teacher_resnet50.yaml
-│   │   ├── part1_save_logits_vit_base.yaml
-│   │   ├── part1_distill_vit_base.yaml
-│   │   ├── part1_distill_resnet50.yaml
-│   │   ├── part3_finetune_from_scratch.yaml
-│   │   ├── part3_finetune_from_distill.yaml
-│   │   └── part4_online_distill.yaml
-│   ├── tiny_vit_5m_cifar100.yaml          # Base config
-│   └── tiny_vit_11m_cifar100.yaml
-├── 1k_distill/
-│   ├── part2_tinyvit21m_scratch.yaml
-│   ├── part2_tinyvit21m_distill_clip.yaml
-│   └── part2_save_logits_clip.yaml
-└── 1k/                                     # Original IN-1K configs
-```
 
----
 
-## Key Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `main.py` | Training (scratch, distill, online distill) |
-| `save_logits.py` | Save sparse teacher logits |
-| `evaluate.py` | Standalone evaluation |
-| `validate_binary_logits.py` | Verify saved logits quality |
-| `explainability.ipynb` | GradCAM visualizations |
 
----
 
 ## Citation
 

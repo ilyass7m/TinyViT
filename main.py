@@ -1,10 +1,4 @@
-# --------------------------------------------------------
-# TinyViT Main (train/validate)
-# Copyright (c) 2022 Microsoft
-# Based on the code: Swin Transformer
-#   (https://github.com/microsoft/swin-transformer)
-# Add distillation with saved teacher logits
-# --------------------------------------------------------
+
 
 import os
 import time
